@@ -44,7 +44,7 @@
                 </div>
                 <div v-if="!collapsed" class="flex-1 min-w-0">
                     <div class="text-[13px] font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate">
-                        SchoolDesk</div>
+                        skoolDesk</div>
                     <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight truncate">Administration
                     </div>
                 </div>

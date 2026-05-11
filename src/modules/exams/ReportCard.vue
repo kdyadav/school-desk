@@ -28,7 +28,7 @@
         <div v-if="report.length" id="report-card"
             class="bg-white rounded-xl border border-gray-200 p-6 space-y-6 print:shadow-none print:border-0">
             <div class="text-center border-b pb-4">
-                <h3 class="text-xl font-bold text-gray-900">SchoolDesk — Report Card</h3>
+                <h3 class="text-xl font-bold text-gray-900">skoolDesk — Report Card</h3>
                 <p class="text-sm text-gray-600">{{ selectedStudent?.firstName }} {{ selectedStudent?.lastName }} — {{
                     selectedStudent?.admissionNo }}</p>
                 <p class="text-xs text-gray-500">{{ academic.yearById(selYearId)?.name }}</p>

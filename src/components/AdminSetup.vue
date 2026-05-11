@@ -32,7 +32,7 @@
                         <circle cx="31" cy="7" r="0.8" fill="#fbbf24" opacity="0.5" />
                     </svg>
                 </div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to SchoolDesk</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to skoolDesk</h1>
                 <p class="text-gray-600">Set up your owner account to get started.</p>
             </div>
 
