@@ -2,6 +2,8 @@
 
 A browser-based, offline-first school management application built with Vue 3 and Vite. All data is stored locally in the browser via IndexedDB (Dexie), so the app runs entirely without a backend.
 
+**Live demo:** [skool-desk.netlify.app](https://skool-desk.netlify.app/)
+
 ## Features
 
 - **First-run admin setup** — the app forces an onboarding flow until an admin account exists.
