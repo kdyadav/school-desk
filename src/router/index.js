@@ -27,6 +27,7 @@ import StudentFees from '../modules/fees/StudentFees.vue'
 import Announcements from '../modules/announcements/Announcements.vue'
 import AuditLog from '../modules/audit/AuditLog.vue'
 import UserProfile from '../components/UserProfile.vue'
+import siteRoutes from '../site/routes'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -34,7 +35,7 @@ const routes = [
   { path: '/login', name: 'Login', component: Login, meta: { public: true } },
   { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword, meta: { public: true } },
   {
-    path: '/',
+    path: '/app',
     component: AppShell,
     meta: { requiresAuth: true },
     children: [
@@ -184,6 +185,7 @@ const routes = [
       },
     ],
   },
+  ...siteRoutes,
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 

@@ -84,7 +84,7 @@
                                 collapsed
                                     ? 'justify-center mx-2 my-0.5 py-2 rounded-md'
                                     : 'pl-4 pr-3 py-1.5 my-px',
-                                (item.to === '/' ? isExactActive : isActive)
+                                (item.to === '/app' ? isExactActive : isActive)
                                     ? (collapsed
                                         ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
                                         : 'bg-indigo-50/70 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-medium')
@@ -144,7 +144,7 @@
                                 {{ auth.role }}
                             </span>
                         </div>
-                        <router-link to="/profile" @click="userMenuOpen = false"
+                        <router-link to="/app/profile" @click="userMenuOpen = false"
                             class="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60">
                             <span class="w-4 h-4 text-slate-400" v-html="iconSvg('user-circle')" />
                             Profile

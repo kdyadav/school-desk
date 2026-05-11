@@ -115,7 +115,7 @@ const handleSetup = async () => {
     try {
         const success = await authStore.createOwner(name.value, email.value, password.value)
         if (success) {
-            router.push('/')
+            router.push({ name: 'Dashboard' })
         } else {
             error.value = 'Setup failed. An owner account may already exist.'
         }

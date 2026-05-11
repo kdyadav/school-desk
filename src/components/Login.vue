@@ -93,7 +93,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useForm } from '../ui-lib/useForm'
 import { required, email as emailValidator, minLength } from '../ui-lib/validators'
@@ -102,6 +102,7 @@ import BaseButton from '../ui-lib/BaseButton.vue'
 import BaseCheckbox from '../ui-lib/BaseCheckbox.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const { email, password, rememberMe, errors, isValid, validateField, validateAll, setField } = useForm(
@@ -128,7 +129,8 @@ const handleLogin = async () => {
     try {
         const success = await authStore.login(email.value, password.value)
         if (success) {
-            router.push('/')
+            const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
+            router.push(redirect || { name: 'Dashboard' })
         } else {
             error.value = 'Invalid credentials'
         }
