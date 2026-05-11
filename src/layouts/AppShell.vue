@@ -55,19 +55,8 @@
                 </button>
             </div>
 
-            <!-- Nav filter -->
-            <div v-if="!collapsed" class="px-3 pt-3 pb-1">
-                <div class="relative">
-                    <span
-                        class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 flex items-center justify-center pointer-events-none"
-                        v-html="iconSvg('search')" />
-                    <input v-model="navFilter" type="text" placeholder="Search menu"
-                        class="w-full pl-8 pr-2 py-1.5 text-[13px] bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-md placeholder-slate-400 text-slate-700 dark:text-slate-200 focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-slate-300 dark:focus:border-slate-600 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-500/20" />
-                </div>
-            </div>
-
             <nav class="flex-1 overflow-y-auto py-2">
-                <div v-for="(group, gi) in filteredGroups" :key="group.key" class="mb-0.5">
+                <div v-for="(group, gi) in visibleGroups" :key="group.key" class="mb-0.5">
                     <button v-if="group.label && !collapsed" @click="toggleGroup(group)"
                         class="w-full flex items-center justify-between px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300">
                         <span class="truncate">{{ group.label }}</span>
@@ -98,10 +87,6 @@
                             </button>
                         </router-link>
                     </template>
-                </div>
-                <div v-if="!filteredGroups.length && !collapsed"
-                    class="px-4 py-6 text-center text-xs text-slate-400 dark:text-slate-500">
-                    No matching items
                 </div>
             </nav>
 
@@ -253,7 +238,6 @@ watch(collapsed, (v) => {
 })
 
 const userMenuOpen = ref(false)
-const navFilter = ref('')
 
 const visibleGroups = computed(() =>
     navGroups
@@ -263,14 +247,6 @@ const visibleGroups = computed(() =>
         }))
         .filter((g) => g.items.length > 0)
 )
-
-const filteredGroups = computed(() => {
-    const q = navFilter.value.trim().toLowerCase()
-    if (!q) return visibleGroups.value
-    return visibleGroups.value
-        .map((g) => ({ ...g, items: g.items.filter((it) => it.label.toLowerCase().includes(q)) }))
-        .filter((g) => g.items.length > 0)
-})
 
 const GROUPS_STORAGE_KEY = 'sidebar.groups.collapsed'
 const collapsedGroups = ref(loadCollapsedGroups())
@@ -291,7 +267,6 @@ watch(collapsedGroups, (val) => {
 }, { deep: true })
 
 const isGroupOpen = (group) => {
-    if (navFilter.value.trim()) return true
     return !group.label || !collapsedGroups.value[group.key]
 }
 
