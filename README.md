@@ -15,6 +15,7 @@ A browser-based, offline-first school management application built with Vue 3 an
 - **Attendance** — daily marking and per-student/section summaries.
 - **Exams** — exam definitions, mark entry, and report cards.
 - **Fees** — fee structures, invoices, payments, and a student-facing fee view.
+- **Payroll** — staff salary structures (earnings/deductions), monthly payslip generation, salary payments, and a staff-facing payslip view.
 - **Announcements** — audience-targeted notices.
 - **Audit log** — every repository write is recorded (with secret fields redacted) and viewable by admins.
 - **Reusable UI library** — form primitives in `src/ui-lib` with a lightweight `useForm` composable and Zod-backed validation.
