@@ -44,42 +44,29 @@
             <form class="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 bg-white dark:bg-slate-900/60 space-y-5"
                 @submit.prevent="onSubmit" novalidate>
                 <div v-if="submitted" class="rounded-md bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 p-4 text-sm text-emerald-800 dark:text-emerald-300">
-                    Thanks, {{ form.name || 'friend' }} — your message has been recorded. We'll get back to you shortly.
+                    Thanks, {{ values.name || 'friend' }} — your message has been recorded. We'll get back to you shortly.
                 </div>
 
                 <div class="grid sm:grid-cols-2 gap-4">
-                    <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Name</span>
-                        <input v-model="form.name" type="text" required
-                            class="mt-1 w-full rounded-md border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500/20" />
-                    </label>
-                    <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Email</span>
-                        <input v-model="form.email" type="email" required
-                            class="mt-1 w-full rounded-md border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500/20" />
-                    </label>
+                    <BaseInput id="name" label="Name" placeholder="Your full name" required
+                        :modelValue="values.name" :error="errors.name"
+                        @update:modelValue="(v) => setField('name', v)" @blur="() => touch('name')" />
+
+                    <BaseInput id="email" label="Email" type="email" placeholder="you@example.com" required
+                        :modelValue="values.email" :error="errors.email"
+                        @update:modelValue="(v) => setField('email', v)" @blur="() => touch('email')" />
                 </div>
-                <label class="block">
-                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">I'm writing about</span>
-                    <select v-model="form.topic"
-                        class="mt-1 w-full rounded-md border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500/20">
-                        <option>Admissions</option>
-                        <option>Tour request</option>
-                        <option>Academics</option>
-                        <option>Other</option>
-                    </select>
-                </label>
-                <label class="block">
-                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Message</span>
-                    <textarea v-model="form.message" rows="5" required
-                        class="mt-1 w-full rounded-md border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500/20" />
-                </label>
+
+                <BaseSelect id="topic" label="I'm writing about" :options="topicOptions"
+                    :modelValue="values.topic" :error="errors.topic"
+                    @update:modelValue="(v) => setField('topic', v)" @blur="() => touch('topic')" />
+
+                <BaseTextarea id="message" label="Message" :rows="5" required
+                    :modelValue="values.message" :error="errors.message"
+                    @update:modelValue="(v) => setField('message', v)" @blur="() => touch('message')" />
 
                 <div class="flex justify-end">
-                    <button type="submit"
-                        class="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm">
-                        Send message
-                    </button>
+                    <BaseButton type="submit" :full-width="false">Send message</BaseButton>
                 </div>
             </form>
         </section>
@@ -87,15 +74,34 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
 import { siteConfig } from '../siteConfig'
 import SectionHeading from '../components/SectionHeading.vue'
+import { BaseInput, BaseSelect, BaseTextarea, BaseButton } from '../../ui-lib'
+import { useForm } from '../../ui-lib/useForm'
+import { required, email, minLength } from '../../ui-lib/validators'
 
-const form = reactive({ name: '', email: '', topic: 'Admissions', message: '' })
+const topicOptions = [
+    { label: 'Admissions', value: 'Admissions' },
+    { label: 'Tour request', value: 'Tour request' },
+    { label: 'Academics', value: 'Academics' },
+    { label: 'Other', value: 'Other' },
+]
+
+const { values, errors, setField, touch, validateAll, reset } = useForm(
+    { name: '', email: '', topic: 'Admissions', message: '' },
+    {
+        name: [required, minLength(2)],
+        email: [required, email],
+        message: [required, minLength(10)],
+    }
+)
+
 const submitted = ref(false)
 
 const onSubmit = () => {
-    if (!form.name || !form.email || !form.message) return
+    if (!validateAll()) return
     submitted.value = true
+    reset()
 }
 </script>
