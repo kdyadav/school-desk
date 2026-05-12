@@ -51,6 +51,15 @@ export const navGroups = [
     ],
   },
   {
+    key: 'payroll',
+    label: 'Payroll',
+    items: [
+      { label: 'Salary Structures', to: '/app/payroll/structures', icon: 'currency', roles: ['admin'] },
+      { label: 'Payslips', to: '/app/payroll/payslips', icon: 'receipt', roles: ['admin'] },
+      { label: 'My Payslips', to: '/app/payroll/my-payslips', icon: 'wallet', roles: ['admin', 'teacher'] },
+    ],
+  },
+  {
     key: 'people',
     label: 'People',
     items: [

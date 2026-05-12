@@ -27,6 +27,12 @@ db.version(2).stores({
   auditLogs: '++id, &uuid, entity, entityId, action, actorId, createdAt, [entity+entityId], [actorId+createdAt], [entity+createdAt]',
 })
 
+db.version(3).stores({
+  salaryStructures: '++id, &uuid, teacherId, effectiveFrom',
+  payslips: '++id, &uuid, teacherId, month, status, [teacherId+month]',
+  salaryPayments: '++id, &uuid, payslipId, paidOn, &voucherNo',
+})
+
 export const TABLES = [
   'academicYears',
   'classes',
@@ -47,6 +53,9 @@ export const TABLES = [
   'announcements',
   'users',
   'auditLogs',
+  'salaryStructures',
+  'payslips',
+  'salaryPayments',
 ]
 
 export default db

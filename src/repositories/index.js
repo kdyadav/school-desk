@@ -19,6 +19,9 @@ import {
   paymentSchema,
   announcementSchema,
   auditLogSchema,
+  salaryStructureSchema,
+  payslipSchema,
+  salaryPaymentSchema,
 } from '../schemas'
 
 export const academicYearRepo = createRepo('academicYears', academicYearSchema)
@@ -43,5 +46,9 @@ export const announcementRepo = createRepo('announcements', announcementSchema)
 export const userRepo = createRepo('users', userSchema, { redact: ['passwordHash'] })
 // The audit log table itself is never audited (avoids infinite recursion).
 export const auditRepo = createRepo('auditLogs', auditLogSchema, { audit: false })
+
+export const salaryStructureRepo = createRepo('salaryStructures', salaryStructureSchema)
+export const payslipRepo = createRepo('payslips', payslipSchema)
+export const salaryPaymentRepo = createRepo('salaryPayments', salaryPaymentSchema)
 
 export { createRepo }

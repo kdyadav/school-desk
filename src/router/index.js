@@ -24,6 +24,9 @@ import ReportCard from '../modules/exams/ReportCard.vue'
 import FeeStructures from '../modules/fees/FeeStructures.vue'
 import FeesInvoices from '../modules/fees/Invoices.vue'
 import StudentFees from '../modules/fees/StudentFees.vue'
+import SalaryStructures from '../modules/payroll/SalaryStructures.vue'
+import Payslips from '../modules/payroll/Payslips.vue'
+import MyPayslips from '../modules/payroll/MyPayslips.vue'
 import Announcements from '../modules/announcements/Announcements.vue'
 import AuditLog from '../modules/audit/AuditLog.vue'
 import UserProfile from '../components/UserProfile.vue'
@@ -164,6 +167,24 @@ const routes = [
         name: 'StudentFees',
         component: StudentFees,
         meta: { title: 'My Fees', roles: ['admin', 'student', 'parent'] },
+      },
+      {
+        path: 'payroll/structures',
+        name: 'SalaryStructures',
+        component: SalaryStructures,
+        meta: { title: 'Salary Structures', roles: ['admin'] },
+      },
+      {
+        path: 'payroll/payslips',
+        name: 'Payslips',
+        component: Payslips,
+        meta: { title: 'Payslips', roles: ['admin'] },
+      },
+      {
+        path: 'payroll/my-payslips',
+        name: 'MyPayslips',
+        component: MyPayslips,
+        meta: { title: 'My Payslips', roles: ['admin', 'teacher'] },
       },
       {
         path: 'announcements',
