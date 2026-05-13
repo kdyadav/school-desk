@@ -1,10 +1,18 @@
 <template>
     <div
         class="h-screen flex bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 overflow-hidden max-w-full antialiased">
+        <!-- Mobile backdrop -->
+        <transition name="drawer-fade">
+            <div v-if="mobileNavOpen" class="fixed inset-0 z-40 bg-slate-900/40 lg:hidden"
+                @click="mobileNavOpen = false" />
+        </transition>
+
         <!-- Sidebar -->
         <aside :class="[
-            'flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-[width] duration-200 overflow-hidden',
-            collapsed ? 'w-[68px]' : 'w-64',
+            'flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-hidden',
+            'fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-200 lg:static lg:flex-shrink-0 lg:transition-[width]',
+            mobileNavOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+            collapsed ? 'lg:w-[68px]' : 'lg:w-64',
         ]">
             <!-- Workspace header -->
             <div :class="[
@@ -25,12 +33,16 @@
                     </div>
                 </div>
                 <button v-if="!collapsed" @click="collapsed = true" title="Close sidebar"
-                    class="p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 flex-shrink-0">
+                    class="hidden lg:inline-flex p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 flex-shrink-0">
                     <span class="w-5 h-5 block" v-html="iconSvg('sidebar')" />
                 </button>
                 <button v-else @click="collapsed = false" title="Open sidebar"
-                    class="p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 flex-shrink-0">
+                    class="hidden lg:inline-flex p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 flex-shrink-0">
                     <span class="w-5 h-5 block" v-html="iconSvg('sidebar')" />
+                </button>
+                <button v-if="!collapsed" @click="mobileNavOpen = false" title="Close menu"
+                    class="lg:hidden p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 flex-shrink-0">
+                    <span class="w-5 h-5 block" v-html="iconSvg('close')" />
                 </button>
             </div>
 
@@ -128,21 +140,28 @@
         <div class="flex-1 flex flex-col min-w-0">
             <!-- Top bar -->
             <header
-                class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-5 gap-4">
-                <!-- Breadcrumbs -->
-                <nav class="flex items-center gap-1.5 min-w-0 text-sm">
-                    <template v-for="(crumb, i) in breadcrumbs" :key="i">
-                        <span v-if="i > 0"
-                            class="text-slate-300 dark:text-slate-600 w-3 h-3 flex items-center justify-center flex-shrink-0"
-                            v-html="iconSvg('chevron-right')" />
-                        <span
-                            :class="['truncate', i === breadcrumbs.length - 1 ? 'text-slate-900 dark:text-slate-100 font-semibold' : 'text-slate-500 dark:text-slate-400']">
-                            {{ crumb }}
-                        </span>
-                    </template>
-                </nav>
+                class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 sm:px-5 gap-2 sm:gap-4">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <!-- Mobile hamburger -->
+                    <button @click="mobileNavOpen = true" title="Open menu"
+                        class="lg:hidden p-2 -ml-1 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 flex-shrink-0">
+                        <span class="w-5 h-5 block" v-html="iconSvg('menu')" />
+                    </button>
+                    <!-- Breadcrumbs -->
+                    <nav class="flex items-center gap-1.5 min-w-0 text-sm">
+                        <template v-for="(crumb, i) in breadcrumbs" :key="i">
+                            <span v-if="i > 0"
+                                class="text-slate-300 dark:text-slate-600 w-3 h-3 flex items-center justify-center flex-shrink-0"
+                                v-html="iconSvg('chevron-right')" />
+                            <span
+                                :class="['truncate', i === breadcrumbs.length - 1 ? 'text-slate-900 dark:text-slate-100 font-semibold' : 'text-slate-500 dark:text-slate-400']">
+                                {{ crumb }}
+                            </span>
+                        </template>
+                    </nav>
+                </div>
 
-                <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                     <!-- Page actions slot (filled via <Teleport to="#page-actions"> from pages) -->
                     <div id="page-actions" class="flex items-center gap-2"></div>
 
@@ -177,7 +196,7 @@
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 dark:bg-slate-900 p-6">
+            <main class="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 dark:bg-slate-900 p-3 sm:p-4 lg:p-6">
                 <router-view />
             </main>
         </div>
@@ -220,6 +239,9 @@ watch(collapsed, (v) => {
 })
 
 const userMenuOpen = ref(false)
+const mobileNavOpen = ref(false)
+// Close mobile drawer whenever the route changes
+watch(() => route.fullPath, () => { mobileNavOpen.value = false })
 
 const visibleGroups = computed(() =>
     navGroups
@@ -334,6 +356,8 @@ const ICONS = {
     wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2v-4M3 10v4m18-4v4m-5 0a1 1 0 110-2 1 1 0 010 2z"/></svg>',
     megaphone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>',
     sidebar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>',
+    menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M6 18L18 6M6 6l12 12"/></svg>',
     'chevron-left': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>',
     'chevron-right': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>',
     'chevron-down': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>',
@@ -348,3 +372,15 @@ const ICONS = {
 }
 const iconSvg = (name) => ICONS[name] || ICONS.home
 </script>
+
+<style scoped>
+.drawer-fade-enter-active,
+.drawer-fade-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.drawer-fade-enter-from,
+.drawer-fade-leave-to {
+    opacity: 0;
+}
+</style>

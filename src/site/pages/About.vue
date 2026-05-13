@@ -1,7 +1,7 @@
 <template>
     <div>
         <section class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
                 <SectionHeading
                     eyebrow="About"
                     :title="`Inside ${schoolName}`"
@@ -10,7 +10,7 @@
             </div>
         </section>
 
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid lg:grid-cols-3 gap-10">
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 grid lg:grid-cols-3 gap-8 lg:gap-10">
             <div class="lg:col-span-2 space-y-6 text-slate-700 dark:text-slate-300 leading-relaxed">
                 <h3 class="text-2xl font-semibold text-slate-900 dark:text-white">Our story</h3>
                 <p v-if="established">
@@ -65,7 +65,7 @@
         </section>
 
         <section class="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
                 <SectionHeading eyebrow="Leadership" title="Meet the team guiding our school." />
                 <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     <article v-for="p in leadership" :key="p.name" class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6">

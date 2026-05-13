@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Report Card</h2>
                 <p class="text-sm text-gray-500">Select a student to view / print their report card.</p>
             </div>
@@ -26,7 +26,7 @@
 
         <!-- Report Card (printable) -->
         <div v-if="report.length" id="report-card"
-            class="bg-white rounded-xl border border-gray-200 p-6 space-y-6 print:shadow-none print:border-0">
+            class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-6 print:shadow-none print:border-0">
             <div class="text-center border-b pb-4">
                 <h3 class="text-xl font-bold text-gray-900">skoolDesk — Report Card</h3>
                 <p class="text-sm text-gray-600">{{ selectedStudent?.firstName }} {{ selectedStudent?.lastName }} — {{
@@ -36,6 +36,7 @@
 
             <div v-for="exam in report" :key="exam.exam.id" class="space-y-2">
                 <h4 class="text-sm font-semibold text-indigo-700">{{ exam.exam.name }}</h4>
+                <div class="overflow-x-auto">
                 <table class="min-w-full text-sm border border-gray-200 rounded">
                     <thead class="bg-gray-50">
                         <tr>
@@ -64,6 +65,7 @@
                         </tr>
                     </tfoot>
                 </table>
+                </div>
             </div>
         </div>
 

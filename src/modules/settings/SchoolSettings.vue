@@ -1,8 +1,8 @@
 <template>
     <div class="max-w-3xl space-y-6">
-        <header class="flex items-start gap-4">
+        <header class="flex items-start gap-3 sm:gap-4">
             <BrandMark size="lg" />
-            <div>
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     School profile
                 </h2>
@@ -13,7 +13,7 @@
         </header>
 
         <form @submit.prevent="onSave"
-            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-5">
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6 space-y-5">
             <BaseInput id="ss-name" label="School name" :modelValue="form.schoolName"
                 @update:modelValue="(v) => setField('schoolName', v)" @blur="() => touch('schoolName')"
                 :error="errors.schoolName" />
@@ -77,7 +77,7 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between pt-2">
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <p v-if="savedAt" class="text-xs text-emerald-600">Saved at {{ savedAt }}</p>
                 <span v-else />
                 <BaseButton type="submit" :loading="saving" :disabled="saving" variant="primary" :full-width="false">

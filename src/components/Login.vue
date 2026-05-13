@@ -1,9 +1,9 @@
 <template>
-    <div class="min-h-screen flex justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div class="max-w-md w-full mx-4">
+    <div class="min-h-screen flex justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4">
+        <div class="max-w-md w-full">
             <!-- Logo/Brand Section -->
-            <div class="text-center my-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 mb-4">
+            <div class="text-center my-6 sm:my-8">
+                <div class="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 mb-3 sm:mb-4">
                     <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
                         class="w-full h-full drop-shadow-lg">
                         <defs>
@@ -32,13 +32,13 @@
                         <circle cx="31" cy="7" r="0.8" fill="#fbbf24" opacity="0.5" />
                     </svg>
                 </div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">skoolDesk</h1>
-                <p class="text-gray-600">Sign in to continue.</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5 sm:mb-2">skoolDesk</h1>
+                <p class="text-sm sm:text-base text-gray-600">Sign in to continue.</p>
             </div>
 
             <!-- Login Card -->
-            <div class="bg-white rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl">
-                <form @submit.prevent="handleLogin" class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 transform transition-all duration-300 hover:shadow-2xl">
+                <form @submit.prevent="handleLogin" class="space-y-5 sm:space-y-6">
                     <div>
                         <BaseInput id="email" name="email" label="Email" type="email" placeholder="Enter your email"
                             :modelValue="email" @update:modelValue="(value) => setField('email', value)"

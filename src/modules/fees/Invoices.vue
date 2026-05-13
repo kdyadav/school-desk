@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-3">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Invoices & Payments</h2>
                 <p class="text-sm text-gray-500">Generate invoices per section, record payments.</p>
             </div>
@@ -22,6 +22,7 @@
 
         <!-- Invoice table -->
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
@@ -52,6 +53,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Generate modal -->

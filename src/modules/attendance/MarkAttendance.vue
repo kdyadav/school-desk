@@ -25,7 +25,7 @@
 
         <!-- Roster -->
         <div v-if="ready" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <div class="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
                 <p class="text-sm font-medium text-gray-700">{{ store.roster.length }} student(s)</p>
                 <div class="flex gap-2 text-xs">
                     <button @click="markAll('present')"
@@ -34,6 +34,7 @@
                         class="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">All Absent</button>
                 </div>
             </div>
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
@@ -64,6 +65,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
             <div class="px-4 py-3 border-t border-gray-100 flex justify-end">
                 <BaseButton :full-width="false" :loading="saving" @click="onSave">Save Attendance</BaseButton>
             </div>

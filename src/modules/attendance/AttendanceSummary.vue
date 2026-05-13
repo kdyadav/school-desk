@@ -26,13 +26,14 @@
         <!-- Summary table -->
         <div v-if="filteredRows.length" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <!-- Totals bar -->
-            <div class="px-4 py-3 border-b border-gray-100 flex gap-6 text-sm">
+            <div class="px-4 py-3 border-b border-gray-100 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                 <span class="text-gray-500">Students: <strong class="text-gray-900">{{ filteredRows.length
                         }}</strong></span>
                 <span class="text-green-600">Present: <strong>{{ totals.present }}</strong></span>
                 <span class="text-red-600">Absent: <strong>{{ totals.absent }}</strong></span>
                 <span class="text-amber-600">Late: <strong>{{ totals.late }}</strong></span>
             </div>
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
@@ -60,6 +61,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div v-else-if="selSectionId && selMonth"

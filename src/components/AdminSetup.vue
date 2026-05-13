@@ -1,23 +1,23 @@
 <template>
-    <div class="min-h-screen flex justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div class="max-w-xl w-full mx-4">
-            <div class="text-center my-8">
-                <div class="inline-flex items-center justify-center mb-4">
+    <div class="min-h-screen flex justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4">
+        <div class="max-w-xl w-full">
+            <div class="text-center my-6 sm:my-8">
+                <div class="inline-flex items-center justify-center mb-3 sm:mb-4">
                     <BrandMark size="lg" />
                 </div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to skoolDesk</h1>
-                <p class="text-gray-600">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5 sm:mb-2">Welcome to skoolDesk</h1>
+                <p class="text-sm sm:text-base text-gray-600">
                     {{ step === 1 ? 'Tell us about your school.' : 'Create the owner account to launch the app.' }}
                 </p>
             </div>
 
-            <ol class="flex items-center justify-center gap-2 mb-6 text-xs font-medium">
+            <ol class="flex items-center justify-center gap-2 mb-4 sm:mb-6 text-xs font-medium">
                 <li :class="step >= 1 ? 'text-indigo-700' : 'text-slate-400'">1. School profile</li>
                 <li class="text-slate-300">→</li>
                 <li :class="step >= 2 ? 'text-indigo-700' : 'text-slate-400'">2. Owner account</li>
             </ol>
 
-            <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="bg-white rounded-2xl shadow-xl p-5 sm:p-8">
                 <!-- Step 1: school profile -->
                 <form v-if="step === 1" @submit.prevent="handleSchoolNext" class="space-y-5">
                     <BaseInput id="setup-school-name" name="schoolName" label="School name"
@@ -106,7 +106,7 @@
                         @update:modelValue="(v) => setOwner('confirmPassword', v)"
                         @blur="() => touchOwner('confirmPassword')" :error="ownerErrors.confirmPassword" />
 
-                    <div class="flex gap-3">
+                    <div class="flex flex-col-reverse sm:flex-row gap-3">
                         <button type="button" @click="step = 1"
                             class="px-4 py-3 text-sm font-medium rounded-lg border border-slate-300 hover:bg-slate-50">
                             Back

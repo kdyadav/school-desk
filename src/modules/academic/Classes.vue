@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Classes</h2>
                 <p class="text-sm text-gray-500">Grades / standards within an academic year.</p>
             </div>
@@ -13,14 +13,15 @@
         </div>
 
         <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
+            <div class="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-3">
                 <label class="text-sm text-gray-600 whitespace-nowrap">Filter by year:</label>
-                <div class="w-48">
+                <div class="w-full sm:w-48">
                     <BaseSelect size="sm" :modelValue="filterYearId"
                         @update:modelValue="(v) => filterYearId = Number(v)"
                         :options="filterYearOptions" />
                 </div>
             </div>
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
@@ -45,6 +46,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <BaseModal v-model="modalOpen" :title="editing?.id ? 'Edit Class' : 'New Class'">

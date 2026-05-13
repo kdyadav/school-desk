@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Salary Structures</h2>
                 <p class="text-sm text-gray-500">Define monthly salary breakdown per staff member.</p>
             </div>
@@ -9,6 +9,7 @@
         </div>
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
@@ -40,6 +41,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <BaseDrawer v-model="drawerOpen" :title="editing?.id ? 'Edit Salary Structure' : 'New Salary Structure'"
@@ -57,8 +59,8 @@
                         <BaseButton type="button" variant="link" size="sm" :full-width="false" @click="addRow">+ Add
                         </BaseButton>
                     </div>
-                    <div v-for="(row, idx) in rows" :key="idx" class="flex gap-2 items-end">
-                        <div class="flex-1">
+                    <div v-for="(row, idx) in rows" :key="idx" class="flex flex-wrap gap-2 items-end">
+                        <div class="flex-1 min-w-[8rem]">
                             <BaseInput :label="idx === 0 ? 'Label' : ''" :modelValue="row.label"
                                 @update:modelValue="(v) => row.label = v" placeholder="Basic / HRA / PF" />
                         </div>
@@ -73,7 +75,7 @@
                         <BaseButton type="button" variant="link-danger" :full-width="false"
                             @click="rows.splice(idx, 1)">✕</BaseButton>
                     </div>
-                    <div class="flex justify-end gap-6 text-sm font-medium text-gray-700 pt-2 border-t border-gray-100">
+                    <div class="flex flex-wrap justify-end gap-x-4 gap-y-1 sm:gap-6 text-sm font-medium text-gray-700 pt-2 border-t border-gray-100">
                         <span>Earnings: ₹{{ sumByType(rows, 'earning') }}</span>
                         <span>Deductions: ₹{{ sumByType(rows, 'deduction') }}</span>
                         <span>Net: ₹{{ sumByType(rows, 'earning') - sumByType(rows, 'deduction') }}</span>

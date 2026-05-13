@@ -1,62 +1,62 @@
 <template>
-    <div class="space-y-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 class="text-2xl font-semibold text-gray-900">
+    <div class="space-y-4 sm:space-y-6">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">
                 Welcome, {{ authStore.user?.name }}
             </h2>
-            <p class="mt-1 text-gray-600">
+            <p class="mt-1 text-sm sm:text-base text-gray-600 break-words">
                 Signed in as <span class="font-medium">{{ authStore.user?.email }}</span>
                 <span class="ml-2 text-xs uppercase tracking-wide text-indigo-600">{{ authStore.role }}</span>
             </p>
         </div>
 
         <!-- KPI tiles -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div v-for="tile in tiles" :key="tile.label" class="bg-white rounded-xl border border-gray-200 p-5">
-                <p class="text-sm text-gray-500">{{ tile.label }}</p>
-                <p class="mt-2 text-2xl font-semibold" :class="tile.color || 'text-gray-900'">{{ tile.value }}</p>
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div v-for="tile in tiles" :key="tile.label" class="bg-white rounded-xl border border-gray-200 p-3 sm:p-5">
+                <p class="text-xs sm:text-sm text-gray-500">{{ tile.label }}</p>
+                <p class="mt-1.5 sm:mt-2 text-xl sm:text-2xl font-semibold" :class="tile.color || 'text-gray-900'">{{ tile.value }}</p>
             </div>
         </div>
 
         <!-- Charts row -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
             <!-- Attendance — last 7 days -->
-            <div class="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-2">
-                <div class="flex items-center justify-between mb-3">
+            <div class="bg-white rounded-xl border border-gray-200 p-3 sm:p-5 lg:col-span-2">
+                <div class="flex items-center justify-between mb-3 gap-2">
                     <h3 class="text-sm font-semibold text-gray-700">Attendance — last 7 days</h3>
-                    <span class="text-xs text-gray-400">{{ attendance7dSubtitle }}</span>
+                    <span class="text-xs text-gray-400 truncate">{{ attendance7dSubtitle }}</span>
                 </div>
-                <div v-show="attendance7d.some((d) => d.total > 0)" ref="attendanceChartEl" style="height: 260px"></div>
+                <div v-show="attendance7d.some((d) => d.total > 0)" ref="attendanceChartEl" class="w-full h-[220px] sm:h-[260px]"></div>
                 <div v-if="!attendance7d.some((d) => d.total > 0)"
-                    class="h-[260px] flex items-center justify-center text-sm text-gray-400">
+                    class="h-[220px] sm:h-[260px] flex items-center justify-center text-sm text-gray-400">
                     No attendance data for the last 7 days.
                 </div>
             </div>
 
             <!-- Fees donut -->
-            <div v-if="showFeesChart" class="bg-white rounded-xl border border-gray-200 p-5">
+            <div v-if="showFeesChart" class="bg-white rounded-xl border border-gray-200 p-3 sm:p-5">
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Fees status</h3>
-                <div v-show="feeTotal > 0" ref="feesChartEl" style="height: 260px"></div>
-                <div v-if="feeTotal === 0" class="h-[260px] flex items-center justify-center text-sm text-gray-400">
+                <div v-show="feeTotal > 0" ref="feesChartEl" class="w-full h-[220px] sm:h-[260px]"></div>
+                <div v-if="feeTotal === 0" class="h-[220px] sm:h-[260px] flex items-center justify-center text-sm text-gray-400">
                     No invoices yet.
                 </div>
             </div>
         </div>
 
         <!-- Students per class / section -->
-        <div v-if="composition.rows.length" class="bg-white rounded-xl border border-gray-200 p-5">
+        <div v-if="composition.rows.length" class="bg-white rounded-xl border border-gray-200 p-3 sm:p-5">
             <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ composition.title }}</h3>
-            <div ref="compositionChartEl" :style="{ height: compositionHeight + 'px' }"></div>
+            <div ref="compositionChartEl" class="w-full" :style="{ height: compositionHeight + 'px' }"></div>
         </div>
 
         <!-- Recent announcements -->
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div class="px-5 py-3 border-b border-gray-200">
+            <div class="px-4 sm:px-5 py-3 border-b border-gray-200">
                 <h3 class="text-sm font-semibold text-gray-700">Recent Announcements</h3>
             </div>
             <div v-if="recentAnnouncements.length" class="divide-y divide-gray-100">
-                <div v-for="a in recentAnnouncements" :key="a.id" class="px-5 py-3">
-                    <div class="flex items-center gap-2">
+                <div v-for="a in recentAnnouncements" :key="a.id" class="px-4 sm:px-5 py-3">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <h4 class="text-sm font-medium text-gray-900">{{ a.title }}</h4>
                         <span
                             class="text-[10px] px-1.5 py-0.5 rounded-full capitalize font-medium bg-gray-100 text-gray-500">{{
@@ -65,7 +65,7 @@
                     <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ a.body }}</p>
                 </div>
             </div>
-            <div v-else class="px-5 py-6 text-center text-sm text-gray-400">No announcements.</div>
+            <div v-else class="px-4 sm:px-5 py-6 text-center text-sm text-gray-400">No announcements.</div>
         </div>
     </div>
 </template>

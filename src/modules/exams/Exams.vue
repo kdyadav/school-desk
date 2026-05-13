@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Exams</h2>
                 <p class="text-sm text-gray-500">Define exams with subjects and max marks.</p>
             </div>
@@ -9,6 +9,7 @@
         </div>
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
@@ -36,6 +37,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Create/Edit Drawer -->
@@ -57,8 +59,8 @@
                         <BaseButton type="button" variant="link" size="sm" :full-width="false" @click="addSubjectRow">+
                             Add</BaseButton>
                     </div>
-                    <div v-for="(row, idx) in subjectRows" :key="idx" class="flex gap-2 items-end">
-                        <div class="flex-1">
+                    <div v-for="(row, idx) in subjectRows" :key="idx" class="flex flex-wrap gap-2 items-end">
+                        <div class="flex-1 min-w-[8rem]">
                             <BaseSelect :label="idx === 0 ? 'Subject' : ''" :modelValue="row.subjectId"
                                 @update:modelValue="(v) => row.subjectId = Number(v)" :options="subjectOpts"
                                 placeholder="Subject" />

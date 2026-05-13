@@ -14,9 +14,9 @@
 
         <div v-if="myPayslips.length" class="space-y-4">
             <div v-for="ps in myPayslips" :key="ps.id"
-                class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                    <div>
+                class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div class="min-w-0">
                         <p class="text-sm font-medium text-gray-900">{{ ps.month }}</p>
                         <p class="text-xs text-gray-500">Net Pay</p>
                     </div>
@@ -24,6 +24,7 @@
                         class="px-2 py-0.5 rounded-full text-xs font-medium capitalize">{{ ps.status }}</span>
                 </div>
 
+                <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <tbody class="divide-y divide-gray-100">
                         <tr v-for="c in (ps.components || [])" :key="c.label">
@@ -64,11 +65,12 @@
                         </tr>
                     </tfoot>
                 </table>
+                </div>
 
                 <div v-if="store.paymentsForPayslip(ps.id).length" class="pt-2 border-t border-gray-100">
                     <p class="text-xs font-medium text-gray-500 mb-1">Payment History</p>
                     <div v-for="p in store.paymentsForPayslip(ps.id)" :key="p.id"
-                        class="flex items-center justify-between text-xs text-gray-600 py-0.5">
+                        class="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600 py-0.5">
                         <span>{{ p.paidOn }} · {{ p.mode }} · {{ p.voucherNo }}{{ p.reference ? ` · ${p.reference}` : '' }}</span>
                         <span class="font-medium text-green-700">₹{{ p.amount }}</span>
                     </div>

@@ -26,18 +26,18 @@
         </div>
 
         <!-- Stats bar -->
-        <div v-if="ready" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div v-if="ready" class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
                 <p class="text-xs text-gray-500 uppercase tracking-wide">Enrolled</p>
-                <p class="text-2xl font-bold text-indigo-600">{{ store.strength }}</p>
+                <p class="text-xl sm:text-2xl font-bold text-indigo-600">{{ store.strength }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
                 <p class="text-xs text-gray-500 uppercase tracking-wide">Unassigned</p>
-                <p class="text-2xl font-bold text-amber-600">{{ store.unenrolledStudents.length }}</p>
+                <p class="text-xl sm:text-2xl font-bold text-amber-600">{{ store.unenrolledStudents.length }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 col-span-2 sm:col-span-1">
                 <p class="text-xs text-gray-500 uppercase tracking-wide">Selected</p>
-                <p class="text-2xl font-bold text-green-600">{{ selected.size }}</p>
+                <p class="text-xl sm:text-2xl font-bold text-green-600">{{ selected.size }}</p>
             </div>
         </div>
 
@@ -45,7 +45,7 @@
         <div v-if="ready" class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <!-- Unassigned students -->
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
-                <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <div class="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
                     <p class="text-sm font-medium text-gray-700">Unassigned Students</p>
                     <div class="flex gap-3">
                         <BaseButton variant="link" size="sm" :full-width="false" @click="selectAll">All</BaseButton>
@@ -82,7 +82,7 @@
                 <div class="px-4 py-3 border-b border-gray-100">
                     <p class="text-sm font-medium text-gray-700">Enrolled in this Section</p>
                 </div>
-                <div class="overflow-y-auto max-h-96">
+                <div class="overflow-x-auto overflow-y-auto max-h-96">
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 text-gray-600">
                             <tr>

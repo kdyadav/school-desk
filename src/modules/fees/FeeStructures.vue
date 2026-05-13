@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Fee Structures</h2>
                 <p class="text-sm text-gray-500">Define fee breakdowns per class and academic year.</p>
             </div>
@@ -9,6 +9,7 @@
         </div>
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
@@ -37,6 +38,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <BaseDrawer v-model="drawerOpen" :title="editing?.id ? 'Edit Fee Structure' : 'New Fee Structure'" width="lg">
@@ -54,8 +56,8 @@
                         <BaseButton type="button" variant="link" size="sm" :full-width="false" @click="addRow">+ Add
                         </BaseButton>
                     </div>
-                    <div v-for="(row, idx) in rows" :key="idx" class="flex gap-2 items-end">
-                        <div class="flex-1">
+                    <div v-for="(row, idx) in rows" :key="idx" class="flex flex-wrap gap-2 items-end">
+                        <div class="flex-1 min-w-[8rem]">
                             <BaseInput :label="idx === 0 ? 'Label' : ''" :modelValue="row.label"
                                 @update:modelValue="(v) => row.label = v" placeholder="Tuition Fee" />
                         </div>

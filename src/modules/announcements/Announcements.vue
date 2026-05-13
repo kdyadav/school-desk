@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Announcements</h2>
                 <p class="text-sm text-gray-500">Post notices targeted by audience.</p>
             </div>
@@ -17,9 +17,9 @@
 
         <!-- Feed -->
         <div v-if="filtered.length" class="space-y-3">
-            <div v-for="a in filtered" :key="a.id" class="bg-white rounded-xl border border-gray-200 p-5 space-y-2">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
+            <div v-for="a in filtered" :key="a.id" class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-2">
+                <div class="flex items-start justify-between gap-3 flex-wrap">
+                    <div class="min-w-0">
                         <h3 class="text-base font-semibold text-gray-900">{{ a.title }}</h3>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-[10px] px-2 py-0.5 rounded-full capitalize font-medium"

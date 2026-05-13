@@ -1,17 +1,18 @@
 <template>
     <Teleport to="body">
         <transition name="modal">
-            <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            <div v-if="modelValue" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
                 @click.self="closeOnBackdrop && $emit('update:modelValue', false)">
                 <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" />
                 <div :class="[
-                    'relative bg-white rounded-2xl shadow-xl w-full overflow-hidden',
+                    'relative bg-white shadow-xl w-full overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh]',
+                    'rounded-t-2xl sm:rounded-2xl',
                     sizeClass,
                 ]">
                     <div v-if="title || $slots.header"
-                        class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                         <slot name="header">
-                            <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900">{{ title }}</h3>
                         </slot>
                         <button @click="$emit('update:modelValue', false)"
                             class="text-gray-400 hover:text-gray-600 p-1 rounded">
@@ -22,11 +23,12 @@
                         </button>
                     </div>
 
-                    <div class="px-6 py-5">
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1">
                         <slot />
                     </div>
 
-                    <div v-if="$slots.footer" class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3 justify-end">
+                    <div v-if="$slots.footer"
+                        class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50 flex flex-wrap gap-2 sm:gap-3 justify-end flex-shrink-0">
                         <slot name="footer" />
                     </div>
                 </div>

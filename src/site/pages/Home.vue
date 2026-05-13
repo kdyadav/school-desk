@@ -3,12 +3,12 @@
         <!-- Hero -->
         <section class="relative overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-indigo-500/10 dark:via-slate-950 dark:to-violet-500/10" />
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 grid lg:grid-cols-12 gap-10 items-center">
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-28 grid lg:grid-cols-12 gap-10 items-center">
                 <div class="lg:col-span-7">
                     <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 text-xs font-semibold tracking-wide">
                         <span class="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Admissions open · 2026–27
                     </p>
-                    <h1 class="mt-5 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="mt-5 text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
                         {{ tagline }}
                     </h1>
                     <p class="mt-5 text-lg text-slate-600 dark:text-slate-300 max-w-2xl">
@@ -55,7 +55,7 @@
 
         <!-- Stats -->
         <section class="border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
                 <div v-for="s in stats" :key="s.label">
                     <div class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">{{ s.value }}</div>
                     <div class="mt-1 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ s.label }}</div>
@@ -64,7 +64,7 @@
         </section>
 
         <!-- Highlights -->
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
             <SectionHeading
                 eyebrow="Why families choose us"
                 title="A complete education, thoughtfully designed."
@@ -80,15 +80,15 @@
 
         <!-- CTA -->
         <section class="bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800">
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-                <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 text-center">
+                <h2 class="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
                     Visit campus this season.
                 </h2>
                 <p class="mt-4 text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
                     Open houses run every other Saturday. Walk the halls, meet our teachers, and see a day in
                     the life of a {{ shortName }} student.
                 </p>
-                <div class="mt-7 flex justify-center gap-3">
+                <div class="mt-7 flex flex-wrap justify-center gap-3">
                     <router-link to="/contact"
                         class="inline-flex items-center px-5 py-3 text-sm font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm">
                         Reserve a spot

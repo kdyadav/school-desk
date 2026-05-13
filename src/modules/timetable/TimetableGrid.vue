@@ -1,17 +1,17 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-3">
-            <div>
+        <div class="flex items-start justify-between flex-wrap gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Timetable</h2>
                 <p class="text-sm text-gray-500">{{ scheduleLabel }}</p>
             </div>
-            <div v-if="rc.isAdmin" class="flex gap-3 items-end">
-                <div class="w-40">
+            <div v-if="rc.isAdmin" class="flex flex-wrap gap-3 items-end w-full sm:w-auto">
+                <div class="flex-1 min-w-32 sm:w-40 sm:flex-initial">
                     <BaseSelect label="Class" size="sm" :modelValue="selClassId"
                         @update:modelValue="(v) => { selClassId = Number(v); selSectionId = '' }"
                         :options="classOptions" placeholder="Class" />
                 </div>
-                <div class="w-40">
+                <div class="flex-1 min-w-32 sm:w-40 sm:flex-initial">
                     <BaseSelect label="Section" size="sm" :modelValue="selSectionId"
                         @update:modelValue="(v) => { selSectionId = Number(v); onSectionChange() }"
                         :options="sectionOptions" placeholder="Section" />

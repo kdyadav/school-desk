@@ -1,7 +1,7 @@
 <template>
     <div>
         <section class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
                 <SectionHeading
                     eyebrow="Admissions · 2026–27"
                     title="A welcoming process, every step of the way."
@@ -31,8 +31,8 @@
                         Tuition includes books, technology, lunch, and most field trips. We are proud that
                         more than a third of our students receive financial assistance.
                     </p>
-                    <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-                        <table class="w-full text-sm">
+                    <div class="mt-6 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table class="min-w-full text-sm">
                             <thead class="bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400">
                                 <tr>
                                     <th class="text-left font-medium px-4 py-3">Division</th>
@@ -68,10 +68,10 @@
             </div>
         </section>
 
-        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-            <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Ready to apply?</h2>
+        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 text-center">
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Ready to apply?</h2>
             <p class="mt-3 text-slate-600 dark:text-slate-400">Our admissions team is here to help — no question too small.</p>
-            <div class="mt-7 flex justify-center gap-3">
+            <div class="mt-7 flex flex-wrap justify-center gap-3">
                 <router-link to="/contact" class="inline-flex items-center px-5 py-3 text-sm font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm">
                     Contact admissions
                 </router-link>

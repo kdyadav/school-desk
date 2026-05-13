@@ -1,11 +1,11 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-3">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Audit Log</h2>
                 <p class="text-sm text-gray-500">Every data change and authentication event, in order.</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 <BaseButton variant="secondary" :full-width="false" size="sm" @click="onRefresh">Refresh</BaseButton>
                 <BaseButton variant="link-danger" :full-width="false" size="sm" @click="onClear">Clear all</BaseButton>
             </div>
@@ -50,11 +50,11 @@
 
                 <div v-if="row.changes && Object.keys(row.changes).length"
                     class="text-xs grid gap-1 border-l-2 border-amber-300 pl-3">
-                    <div v-for="(diff, field) in row.changes" :key="field" class="flex flex-wrap gap-2">
+                    <div v-for="(diff, field) in row.changes" :key="field" class="flex flex-wrap gap-2 break-words">
                         <span class="font-mono text-gray-600">{{ field }}</span>
-                        <span class="text-red-600 line-through">{{ fmt(diff.before) }}</span>
+                        <span class="text-red-600 line-through break-all">{{ fmt(diff.before) }}</span>
                         <span class="text-gray-400">→</span>
-                        <span class="text-green-700">{{ fmt(diff.after) }}</span>
+                        <span class="text-green-700 break-all">{{ fmt(diff.after) }}</span>
                     </div>
                 </div>
                 <pre v-else-if="row.before || row.after || row.meta"

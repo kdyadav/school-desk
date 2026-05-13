@@ -1,7 +1,7 @@
 <template>
     <div>
         <section class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
                 <SectionHeading
                     eyebrow="News & events"
                     title="What's happening on campus."
@@ -10,12 +10,12 @@
             </div>
         </section>
 
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid lg:grid-cols-3 gap-10">
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 grid lg:grid-cols-3 gap-8 lg:gap-10">
             <div class="lg:col-span-2 space-y-6">
                 <article v-for="(p, i) in posts" :key="p.title"
                     :class="['rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 overflow-hidden', i === 0 ? 'lg:flex' : '']">
                     <div :class="['bg-gradient-to-br', p.gradient, i === 0 ? 'lg:w-1/2 aspect-[4/3] lg:aspect-auto' : 'aspect-[16/7]']" />
-                    <div :class="['p-6', i === 0 ? 'lg:w-1/2 lg:p-8' : '']">
+                    <div :class="['p-5 sm:p-6', i === 0 ? 'lg:w-1/2 lg:p-8' : '']">
                         <p class="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-300 font-semibold">{{ p.tag }}</p>
                         <h3 :class="['mt-2 font-semibold text-slate-900 dark:text-white', i === 0 ? 'text-2xl' : 'text-lg']">
                             {{ p.title }}

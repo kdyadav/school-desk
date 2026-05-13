@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Subjects</h2>
                 <p class="text-sm text-gray-500">Catalog of subjects taught across the school.</p>
             </div>
@@ -15,6 +15,7 @@
                         @update:modelValue="(v) => search = v" />
                 </div>
             </div>
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
@@ -38,6 +39,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <BaseModal v-model="modalOpen" :title="editing?.id ? 'Edit Subject' : 'New Subject'">

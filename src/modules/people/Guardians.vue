@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-gray-900">Guardians</h2>
                 <p class="text-sm text-gray-500">{{ store.guardians.length }} guardian(s) on record.</p>
             </div>
@@ -15,10 +15,11 @@
                         @update:modelValue="(v) => search = v" />
                 </div>
             </div>
+            <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
-                        <th class="text-left px-4 py-2 font-medium">Name</th>
+                        <th class="text-left px-4 py-2 font-medium whitespace-nowrap">Name</th>
                         <th class="text-left px-4 py-2 font-medium">Relation</th>
                         <th class="text-left px-4 py-2 font-medium">Phone</th>
                         <th class="text-left px-4 py-2 font-medium">Email</th>
@@ -42,8 +43,9 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
             <div v-if="totalPages > 1"
-                class="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
+                class="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600 flex-wrap gap-2">
                 <span>Page {{ page }} of {{ totalPages }}</span>
                 <div class="flex gap-2">
                     <BaseButton variant="secondary" size="sm" :full-width="false" :disabled="page === 1" @click="prev">
@@ -56,7 +58,7 @@
 
         <BaseDrawer v-model="drawerOpen" :title="editing?.id ? 'Edit Guardian' : 'New Guardian'" width="md">
             <form @submit.prevent="onSubmit" class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <BaseInput label="First name" :modelValue="form.firstName"
                         @update:modelValue="(v) => setField('firstName', v)" @blur="() => validateField('firstName')"
                         :error="errors.firstName" />

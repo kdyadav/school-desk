@@ -14,9 +14,9 @@
 
         <div v-if="myInvoices.length" class="space-y-4">
             <div v-for="inv in myInvoices" :key="inv.id"
-                class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                    <div>
+                class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div class="min-w-0">
                         <p class="text-sm font-medium text-gray-900">
                             {{ academic.yearById(inv.academicYearId)?.name || '' }}
                         </p>
@@ -27,6 +27,7 @@
                 </div>
 
                 <!-- Fee items -->
+                <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <tbody class="divide-y divide-gray-100">
                         <tr v-for="item in (inv.items || [])" :key="item.label">
@@ -52,6 +53,7 @@
                         </tr>
                     </tfoot>
                 </table>
+                </div>
 
                 <!-- Payment history -->
                 <div v-if="store.paymentsForInvoice(inv.id).length" class="pt-2 border-t border-gray-100">

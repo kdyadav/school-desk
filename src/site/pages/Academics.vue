@@ -1,7 +1,7 @@
 <template>
     <div>
         <section class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
                 <SectionHeading
                     eyebrow="Academics"
                     title="A program that grows with your child."
@@ -10,8 +10,8 @@
             </div>
         </section>
 
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
-            <article v-for="d in divisions" :key="d.name" class="grid lg:grid-cols-3 gap-8 items-start">
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-10 sm:space-y-12">
+            <article v-for="d in divisions" :key="d.name" class="grid lg:grid-cols-3 gap-6 lg:gap-8 items-start">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">{{ d.grades }}</p>
                     <h3 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{{ d.name }}</h3>
@@ -26,7 +26,7 @@
         </section>
 
         <section class="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
                 <SectionHeading eyebrow="Beyond the classroom" title="Programs that round out the day." />
                 <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     <FeatureCard v-for="p in programs" :key="p.title" :icon="p.icon" :title="p.title">

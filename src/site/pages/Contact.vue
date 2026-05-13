@@ -1,7 +1,7 @@
 <template>
     <div>
         <section class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
                 <SectionHeading
                     eyebrow="Contact"
                     title="We'd love to hear from you."
@@ -10,7 +10,7 @@
             </div>
         </section>
 
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid lg:grid-cols-3 gap-10">
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 grid lg:grid-cols-3 gap-8 lg:gap-10">
             <div class="space-y-6">
                 <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-900/60">
                     <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Visit</h3>
@@ -41,7 +41,7 @@
                 </div>
             </div>
 
-            <form class="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 bg-white dark:bg-slate-900/60 space-y-5"
+            <form class="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 lg:p-8 bg-white dark:bg-slate-900/60 space-y-5"
                 @submit.prevent="onSubmit" novalidate>
                 <div v-if="submitted" class="rounded-md bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 p-4 text-sm text-emerald-800 dark:text-emerald-300">
                     Thanks, {{ values.name || 'friend' }} — your message has been recorded. We'll get back to you shortly.
