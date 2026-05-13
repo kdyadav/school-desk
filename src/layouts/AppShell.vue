@@ -147,8 +147,15 @@
                         class="lg:hidden p-2 -ml-1 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 flex-shrink-0">
                         <span class="w-5 h-5 block" v-html="iconSvg('menu')" />
                     </button>
-                    <!-- Breadcrumbs -->
-                    <nav class="flex items-center gap-1.5 min-w-0 text-sm">
+                    <!-- Mobile brand (sidebar logo lives in the drawer) -->
+                    <router-link to="/app" class="lg:hidden flex items-center gap-2 min-w-0" title="Home">
+                        <BrandMark size="sm" />
+                        <span class="text-[13px] font-semibold text-slate-900 dark:text-slate-100 truncate">
+                            {{ school.profile?.shortName || school.profile?.schoolName || 'skoolDesk' }}
+                        </span>
+                    </router-link>
+                    <!-- Breadcrumbs (desktop only) -->
+                    <nav class="hidden lg:flex items-center gap-1.5 min-w-0 text-sm">
                         <template v-for="(crumb, i) in breadcrumbs" :key="i">
                             <span v-if="i > 0"
                                 class="text-slate-300 dark:text-slate-600 w-3 h-3 flex items-center justify-center flex-shrink-0"
