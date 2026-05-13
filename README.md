@@ -6,7 +6,9 @@ A browser-based, offline-first school management application built with Vue 3 an
 
 ## Features
 
-- **First-run admin setup** — the app forces an onboarding flow until an admin account exists.
+- **First-run setup wizard** — a two-step onboarding flow (school profile, then admin account) is forced until both have been configured.
+- **Per-deployment multi-tenancy** — every browser-installed copy is its own tenant. School name, short name, tagline, contact details, social/nav links, logo, favicon, and primary colour are configured at runtime and stored in IndexedDB. The document title, favicon, and theme colour update live from the saved profile.
+- **Editable school profile** — admins can update branding and contact information any time at `/app/settings/school`.
 - **Authentication & roles** — local auth with bcrypt-hashed passwords; role-based route guards for `admin`, `teacher`, `student`, and `parent`.
 - **Academic setup** — academic years, classes, sections, and subjects.
 - **People** — students, guardians, teachers, and user accounts.
@@ -51,7 +53,7 @@ npm install
 npm run dev
 ```
 
-Open the printed local URL. On first launch you will be redirected to `/setup` to create the initial admin account.
+Open the printed local URL. On first launch you will be redirected to `/setup` to fill in the school profile and create the initial admin account.
 
 ### Build & preview
 
@@ -83,12 +85,22 @@ src/
   composables/    # useTheme, useTableState, useCommandPalette, useRoleContext
   audit/          # Audit logger wired into repositories
   plugins/        # PrimeVue and other plugin setup
-tests/            # Vitest suites for stores, repositories, and audit
+  site/           # Public marketing site (Home/About/Contact/…) and siteConfig defaults
+tests/            # Vitest suites for stores, repositories, schemas, audit, and site
 ```
 
 ## Data & persistence
 
-Data lives entirely in the browser's IndexedDB under the `SchoolDeskDB` database (see `src/db/dexie.js`). Clearing site data in your browser will reset the application, including the admin account. Seed data can be loaded from `src/db/seed.js`.
+Data lives entirely in the browser's IndexedDB under the `SchoolDeskDB` database (see `src/db/dexie.js`). Clearing site data in your browser will reset the application, including the admin account and the school profile. Seed data can be loaded from `src/db/seed.js`.
+
+## Branding the app for a school
+
+Each install is a self-contained tenant; there is no central registry of schools. To rebrand:
+
+1. Run the app and complete the setup wizard, providing the school name, short name, tagline, contact details, primary colour, and (optionally) a logo and favicon.
+2. After login, an admin can revisit **System → School Profile** (`/app/settings/school`) to change any of the above.
+
+Logos and favicons are stored as base64 data URLs on the singleton `schoolProfile` row, so no asset pipeline or backend is involved. The fallback values used before the profile is saved live in `src/site/siteConfig.js`.
 
 ## License
 
