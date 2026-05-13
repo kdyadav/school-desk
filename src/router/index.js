@@ -30,8 +30,11 @@ import MyPayslips from '../modules/payroll/MyPayslips.vue'
 import Announcements from '../modules/announcements/Announcements.vue'
 import AuditLog from '../modules/audit/AuditLog.vue'
 import UserProfile from '../components/UserProfile.vue'
+import SchoolSettings from '../modules/settings/SchoolSettings.vue'
 import siteRoutes from '../site/routes'
 import { useAuthStore } from '../stores/auth'
+import { useSchoolStore } from '../stores/school'
+import { applyFavicon, applyPrimaryColor, composeTitle } from '../composables/useBranding'
 
 const routes = [
   { path: '/setup', name: 'AdminSetup', component: AdminSetup, meta: { setup: true } },
@@ -204,6 +207,12 @@ const routes = [
         component: UserProfile,
         meta: { title: 'My Profile' },
       },
+      {
+        path: 'settings/school',
+        name: 'SchoolSettings',
+        component: SchoolSettings,
+        meta: { title: 'School Profile', roles: ['admin'] },
+      },
     ],
   },
   ...siteRoutes,
@@ -217,6 +226,13 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
+  const school = useSchoolStore()
+
+  // Lazy-load the tenant profile once per session so navigation stays cheap
+  // and offline-first while branding follows the configured profile.
+  if (!school.loaded) {
+    try { await school.load() } catch { /* keep defaults */ }
+  }
 
   // Check if onboarding is needed (no users in DB)
   const setupNeeded = await auth.needsSetup()
@@ -247,6 +263,18 @@ router.beforeEach(async (to) => {
   }
 
   return true
+})
+
+// Apply tenant branding after each successful navigation so the document
+// title, favicon, and primary colour always reflect the current profile.
+router.afterEach((to) => {
+  const school = useSchoolStore()
+  const profile = school.profile || {}
+  if (typeof document !== 'undefined') {
+    document.title = composeTitle(to.meta?.title, profile.schoolName)
+  }
+  applyFavicon(profile.faviconDataUrl || profile.logoDataUrl || null)
+  applyPrimaryColor(profile.primaryColor)
 })
 
 export default router

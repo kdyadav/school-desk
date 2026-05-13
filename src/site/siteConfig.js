@@ -1,5 +1,7 @@
-// Public-website configuration. Edit this file to update school details
-// shown across the marketing pages (header, footer, contact, hero, etc.).
+// Default school identity used until the tenant configures their own profile
+// via Setup or Settings → School Profile. The runtime profile (Dexie-backed,
+// see useSchoolStore) is merged on top of these values, so anything not yet
+// customised falls back here.
 export const siteConfig = {
   schoolName: 'skoolDesk Academy',
   shortName: 'skoolDesk',

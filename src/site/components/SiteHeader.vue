@@ -3,17 +3,15 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="h-16 flex items-center justify-between gap-4">
                 <router-link to="/" class="flex items-center gap-2.5 group">
-                    <span class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold shadow-sm">
-                        sD
-                    </span>
+                    <BrandMark size="md" />
                     <span class="font-semibold text-slate-900 dark:text-white tracking-tight">
-                        {{ siteConfig.shortName }}
+                        {{ shortName }}
                     </span>
                 </router-link>
 
                 <nav class="hidden md:flex items-center gap-1">
                     <router-link
-                        v-for="item in siteConfig.nav"
+                        v-for="item in nav"
                         :key="item.to"
                         :to="item.to"
                         class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-md transition-colors"
@@ -51,7 +49,7 @@
 
             <div v-if="open" id="site-mobile-nav" class="md:hidden pb-4 flex flex-col gap-1">
                 <router-link
-                    v-for="item in siteConfig.nav"
+                    v-for="item in nav"
                     :key="item.to"
                     :to="item.to"
                     class="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -74,14 +72,20 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useSchoolStore } from '../../stores/school'
 import { siteConfig } from '../siteConfig'
+import BrandMark from '../../components/BrandMark.vue'
 
 const auth = useAuthStore()
+const school = useSchoolStore()
 const route = useRoute()
 const open = ref(false)
+
+const shortName = computed(() => school.profile?.shortName || siteConfig.shortName)
+const nav = computed(() => school.profile?.nav?.length ? school.profile.nav : siteConfig.nav)
 
 watch(() => route.fullPath, () => { open.value = false })
 </script>

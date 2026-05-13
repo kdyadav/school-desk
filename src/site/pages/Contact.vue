@@ -15,27 +15,27 @@
                 <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-900/60">
                     <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Visit</h3>
                     <address class="mt-3 not-italic text-sm text-slate-700 dark:text-slate-300 space-y-1">
-                        <div v-for="line in siteConfig.contact.addressLines" :key="line">{{ line }}</div>
+                        <div v-for="line in contact.addressLines" :key="line">{{ line }}</div>
                     </address>
                 </div>
                 <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-900/60">
                     <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Reach out</h3>
                     <dl class="mt-3 space-y-2 text-sm">
-                        <div>
+                        <div v-if="contact.phone">
                             <dt class="text-slate-500">Phone</dt>
-                            <dd class="text-slate-900 dark:text-white">{{ siteConfig.contact.phone }}</dd>
+                            <dd class="text-slate-900 dark:text-white">{{ contact.phone }}</dd>
                         </div>
-                        <div>
+                        <div v-if="contact.email">
                             <dt class="text-slate-500">Email</dt>
                             <dd>
-                                <a :href="`mailto:${siteConfig.contact.email}`" class="text-indigo-600 dark:text-indigo-300 hover:underline">
-                                    {{ siteConfig.contact.email }}
+                                <a :href="`mailto:${contact.email}`" class="text-indigo-600 dark:text-indigo-300 hover:underline">
+                                    {{ contact.email }}
                                 </a>
                             </dd>
                         </div>
-                        <div>
+                        <div v-if="contact.officeHours">
                             <dt class="text-slate-500">Office hours</dt>
-                            <dd class="text-slate-900 dark:text-white">{{ siteConfig.contact.officeHours }}</dd>
+                            <dd class="text-slate-900 dark:text-white">{{ contact.officeHours }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -74,9 +74,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useSchoolStore } from '../../stores/school'
 import { siteConfig } from '../siteConfig'
 import SectionHeading from '../components/SectionHeading.vue'
+
+const school = useSchoolStore()
+const contact = computed(() => school.profile?.contact || siteConfig.contact)
 import { BaseInput, BaseSelect, BaseTextarea, BaseButton } from '../../ui-lib'
 import { useForm } from '../../ui-lib/useForm'
 import { required, email, minLength } from '../../ui-lib/validators'

@@ -22,6 +22,7 @@ import {
   salaryStructureSchema,
   payslipSchema,
   salaryPaymentSchema,
+  schoolProfileSchema,
 } from '../schemas'
 
 export const academicYearRepo = createRepo('academicYears', academicYearSchema)
@@ -50,5 +51,11 @@ export const auditRepo = createRepo('auditLogs', auditLogSchema, { audit: false 
 export const salaryStructureRepo = createRepo('salaryStructures', salaryStructureSchema)
 export const payslipRepo = createRepo('payslips', payslipSchema)
 export const salaryPaymentRepo = createRepo('salaryPayments', salaryPaymentSchema)
+
+// School profile is a singleton row keyed on `key=1`. Logos/favicons live as
+// data URLs and are large/noisy in audit diffs, so redact them.
+export const schoolProfileRepo = createRepo('schoolProfile', schoolProfileSchema, {
+  redact: ['logoDataUrl', 'faviconDataUrl'],
+})
 
 export { createRepo }

@@ -14,38 +14,14 @@
                     : 'h-14 flex items-center px-3 gap-2.5',
             ]">
                 <div class="w-9 h-9 flex-shrink-0">
-                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                        <defs>
-                            <linearGradient id="sidebar-bg" x1="0" y1="0" x2="48" y2="48"
-                                gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#4f46e5" />
-                                <stop offset="100%" stop-color="#7c3aed" />
-                            </linearGradient>
-                            <linearGradient id="sidebar-spark" x1="24" y1="4" x2="24" y2="18"
-                                gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#fbbf24" />
-                                <stop offset="100%" stop-color="#f59e0b" />
-                            </linearGradient>
-                        </defs>
-                        <rect width="48" height="48" rx="12" fill="url(#sidebar-bg)" />
-                        <path
-                            d="M10 34V18a1 1 0 0 1 .553-.894C13.5 15.5 18 15 24 18c6-3 10.5-2.5 13.447-1.106A1 1 0 0 1 38 18v16a1 1 0 0 1-1.368.929C33.5 33.5 29 33 24 36c-5-3-9.5-2.5-12.632-1.071A1 1 0 0 1 10 34z"
-                            fill="white" fill-opacity="0.2" />
-                        <path d="M24 18v18" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-                        <path d="M12 19c3-1.5 6.5-1.8 12 1v16c-5.5-2.8-9-2.5-12-1V19z" fill="white"
-                            fill-opacity="0.85" />
-                        <path d="M36 19c-3-1.5-6.5-1.8-12 1v16c5.5-2.8 9-2.5 12-1V19z" fill="white"
-                            fill-opacity="0.65" />
-                        <path d="M24 5l1.8 4.5L30 11l-4.2 1.5L24 17l-1.8-4.5L18 11l4.2-1.5L24 5z"
-                            fill="url(#sidebar-spark)" />
-                        <circle cx="17" cy="8" r="1" fill="#fbbf24" opacity="0.7" />
-                        <circle cx="31" cy="7" r="0.8" fill="#fbbf24" opacity="0.5" />
-                    </svg>
+                    <BrandMark size="md" />
                 </div>
                 <div v-if="!collapsed" class="flex-1 min-w-0">
                     <div class="text-[13px] font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate">
-                        skoolDesk</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight truncate">Administration
+                        {{ school.profile?.shortName || school.profile?.schoolName || 'skoolDesk' }}
+                    </div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight truncate">
+                        Administration
                     </div>
                 </div>
                 <button v-if="!collapsed" @click="collapsed = true" title="Close sidebar"
@@ -214,14 +190,17 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useSchoolStore } from '../stores/school'
 import { navGroups } from './navConfig'
 import { useTheme } from '../composables/useTheme'
 import { useCommandPalette } from '../composables/useCommandPalette'
 import CommandPalette from './CommandPalette.vue'
+import BrandMark from '../components/BrandMark.vue'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const school = useSchoolStore()
 
 const { theme, toggle: toggleTheme } = useTheme()
 const { show: showPalette } = useCommandPalette()
@@ -365,6 +344,7 @@ const ICONS = {
     bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>',
     'user-circle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>',
     logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H9m4-7H6a2 2 0 00-2 2v14a2 2 0 002 2h7"/></svg>',
+    cog: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>',
 }
 const iconSvg = (name) => ICONS[name] || ICONS.home
 </script>

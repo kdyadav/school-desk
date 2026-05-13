@@ -9,10 +9,10 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Admissions open · 2026–27
                     </p>
                     <h1 class="mt-5 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        {{ siteConfig.tagline }}
+                        {{ tagline }}
                     </h1>
                     <p class="mt-5 text-lg text-slate-600 dark:text-slate-300 max-w-2xl">
-                        {{ siteConfig.schoolName }} is a K–12 community where rigorous academics, the arts, and
+                        {{ schoolName }} is a K–12 community where rigorous academics, the arts, and
                         athletics come together to shape thoughtful, capable young people ready for what's next.
                     </p>
                     <div class="mt-8 flex flex-wrap gap-3">
@@ -45,7 +45,7 @@
                             <path d="M40 250 Q120 180 200 220 T380 200" stroke="#fff" stroke-opacity="0.6" stroke-width="2" fill="none" />
                         </svg>
                         <div class="absolute bottom-5 left-5 right-5 text-white">
-                            <div class="text-xs uppercase tracking-widest opacity-80">Founded {{ siteConfig.established }}</div>
+                            <div v-if="established" class="text-xs uppercase tracking-widest opacity-80">Founded {{ established }}</div>
                             <div class="text-2xl font-semibold mt-1">A campus built for curiosity.</div>
                         </div>
                     </div>
@@ -86,7 +86,7 @@
                 </h2>
                 <p class="mt-4 text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
                     Open houses run every other Saturday. Walk the halls, meet our teachers, and see a day in
-                    the life of a {{ siteConfig.shortName }} student.
+                    the life of a {{ shortName }} student.
                 </p>
                 <div class="mt-7 flex justify-center gap-3">
                     <router-link to="/contact"
@@ -104,9 +104,17 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useSchoolStore } from '../../stores/school'
 import { siteConfig } from '../siteConfig'
 import SectionHeading from '../components/SectionHeading.vue'
 import FeatureCard from '../components/FeatureCard.vue'
+
+const school = useSchoolStore()
+const schoolName = computed(() => school.profile?.schoolName || siteConfig.schoolName)
+const shortName = computed(() => school.profile?.shortName || siteConfig.shortName)
+const tagline = computed(() => school.profile?.tagline || siteConfig.tagline)
+const established = computed(() => school.profile?.established ?? siteConfig.established)
 
 const stats = [
     { value: '850+', label: 'Students K–12' },

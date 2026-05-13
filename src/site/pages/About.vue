@@ -4,7 +4,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
                 <SectionHeading
                     eyebrow="About"
-                    :title="`Inside ${siteConfig.schoolName}`"
+                    :title="`Inside ${schoolName}`"
                     description="A K–12 independent school built on the simple idea that great teaching, in a community that knows you, changes everything."
                 />
             </div>
@@ -13,8 +13,8 @@
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid lg:grid-cols-3 gap-10">
             <div class="lg:col-span-2 space-y-6 text-slate-700 dark:text-slate-300 leading-relaxed">
                 <h3 class="text-2xl font-semibold text-slate-900 dark:text-white">Our story</h3>
-                <p>
-                    Founded in {{ siteConfig.established }} by a small group of educators and parents, our
+                <p v-if="established">
+                    Founded in {{ established }} by a small group of educators and parents, our
                     school began as a single building serving 60 students. Today we welcome more than 850
                     learners across three divisions on a 14-acre campus, while keeping the close community
                     feel that defined our earliest years.
@@ -47,7 +47,7 @@
                 <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-900/60">
                     <h4 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">At a glance</h4>
                     <dl class="mt-4 space-y-3 text-sm">
-                        <div class="flex justify-between gap-4"><dt class="text-slate-500">Founded</dt><dd class="text-slate-900 dark:text-white font-medium">{{ siteConfig.established }}</dd></div>
+                        <div v-if="established" class="flex justify-between gap-4"><dt class="text-slate-500">Founded</dt><dd class="text-slate-900 dark:text-white font-medium">{{ established }}</dd></div>
                         <div class="flex justify-between gap-4"><dt class="text-slate-500">Enrollment</dt><dd class="text-slate-900 dark:text-white font-medium">850+</dd></div>
                         <div class="flex justify-between gap-4"><dt class="text-slate-500">Grades</dt><dd class="text-slate-900 dark:text-white font-medium">K–12</dd></div>
                         <div class="flex justify-between gap-4"><dt class="text-slate-500">Campus</dt><dd class="text-slate-900 dark:text-white font-medium">14 acres</dd></div>
@@ -83,8 +83,14 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useSchoolStore } from '../../stores/school'
 import { siteConfig } from '../siteConfig'
 import SectionHeading from '../components/SectionHeading.vue'
+
+const school = useSchoolStore()
+const schoolName = computed(() => school.profile?.schoolName || siteConfig.schoolName)
+const established = computed(() => school.profile?.established ?? siteConfig.established)
 
 const values = [
     { title: 'Curiosity', description: 'Question everything; ask one more.' },

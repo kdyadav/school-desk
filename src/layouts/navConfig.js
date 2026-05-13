@@ -84,6 +84,7 @@ export const navGroups = [
     key: 'system',
     label: 'System',
     items: [
+      { label: 'School Profile', to: '/app/settings/school', icon: 'cog', roles: ['admin'] },
       { label: 'Audit Log', to: '/app/audit-log', icon: 'clipboard-list', roles: ['admin'] },
     ],
   },

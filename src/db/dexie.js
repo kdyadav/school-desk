@@ -33,6 +33,13 @@ db.version(3).stores({
   salaryPayments: '++id, &uuid, payslipId, paidOn, &voucherNo',
 })
 
+// Singleton row keyed on `key=1` holding the tenant's school profile (name,
+// branding, contact, etc.). Stored locally so each browser-installed copy of
+// the app behaves like a self-contained tenant.
+db.version(4).stores({
+  schoolProfile: '&key, schoolName',
+})
+
 export const TABLES = [
   'academicYears',
   'classes',
@@ -56,6 +63,7 @@ export const TABLES = [
   'salaryStructures',
   'payslips',
   'salaryPayments',
+  'schoolProfile',
 ]
 
 export default db
