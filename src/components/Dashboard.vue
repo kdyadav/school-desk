@@ -115,7 +115,7 @@ function scopeAttendanceRows(rows) {
 async function loadAttendance7d() {
     const days = buildLast7Days()
     try {
-        const all = await attendanceRepo.query((r) => r.date >= days[0] && r.date <= days[6])
+        const all = await attendanceRepo.list({ dateFrom: days[0], dateTo: days[6] })
         const scoped = scopeAttendanceRows(all)
         attendance7d.value = days.map((date) => {
             const rows = scoped.filter((r) => r.date === date)
@@ -139,7 +139,7 @@ onMounted(async () => {
     await Promise.all([people.loadAll(), academic.loadAll(), fees.loadAll(), ann.loadAll()])
     await rc.resolve()
     try {
-        const todayRecords = await attendanceRepo.query((r) => r.date === today)
+        const todayRecords = await attendanceRepo.where('date', today)
         const scopedToday = scopeAttendanceRows(todayRecords)
         if (scopedToday.length) {
             const present = scopedToday.filter((r) => r.status === 'present' || r.status === 'late').length

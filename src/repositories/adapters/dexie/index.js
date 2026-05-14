@@ -7,8 +7,17 @@ const table = (name) => {
 }
 
 export const dexieAdapter = {
-  async list(tableName, { limit, offset } = {}) {
-    let q = table(tableName).toCollection()
+  async list(tableName, { limit, offset, dateFrom, dateTo } = {}) {
+    // `dateFrom`/`dateTo` filter on the indexed `date` column (currently used
+    // only by attendance). Mirrors the server's augmentWhereFromQuery.
+    let q
+    if (dateFrom || dateTo) {
+      const lower = dateFrom ?? '0000-01-01'
+      const upper = dateTo ?? '9999-12-31'
+      q = table(tableName).where('date').between(lower, upper, true, true)
+    } else {
+      q = table(tableName).toCollection()
+    }
     if (offset) q = q.offset(offset)
     if (limit) q = q.limit(limit)
     return q.toArray()
@@ -35,10 +44,6 @@ export const dexieAdapter = {
   async remove(tableName, id) {
     await table(tableName).delete(id)
     return true
-  },
-
-  async query(tableName, predicate) {
-    return table(tableName).filter(predicate).toArray()
   },
 
   async where(tableName, indexField, value) {

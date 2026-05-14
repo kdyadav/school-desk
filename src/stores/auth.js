@@ -1,10 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import bcrypt from 'bcryptjs'
-import { userRepo } from '../repositories'
-import { recordAudit } from '../audit/logger'
-import { seedDatabase, isDbEmpty } from '../db/seed'
-import { withAuditDisabled } from '../audit'
+import { apiFetch, ApiError } from '../repositories/adapters/http/client'
 
 const SESSION_KEY = 'school.session'
 
@@ -22,15 +18,6 @@ const saveSession = (session) => {
   else localStorage.removeItem(SESSION_KEY)
 }
 
-const toPublic = (u) => ({
-  id: u.id,
-  uuid: u.uuid,
-  email: u.email,
-  role: u.role,
-  name: u.name || u.email.split('@')[0],
-  linkedId: u.linkedId ?? null,
-})
-
 export const useAuthStore = defineStore('auth', () => {
   const initial = loadSession()
   const user = ref(initial?.user || null)
@@ -46,66 +33,39 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const login = async (email, password) => {
-    const found = await userRepo.where('email', email)
-    const u = found[0]
-    if (!u) {
-      await recordAudit({ entity: 'auth', action: 'auth.login_failed', meta: { email, reason: 'unknown_user' } })
-      return false
+    try {
+      const res = await apiFetch('/auth/login', { method: 'POST', body: { email, password } })
+      user.value = res.user
+      token.value = res.token
+      saveSession({ user: user.value, token: token.value })
+      return true
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) return false
+      throw err
     }
-    const ok = bcrypt.compareSync(password, u.passwordHash)
-    if (!ok) {
-      await recordAudit({ entity: 'auth', action: 'auth.login_failed', meta: { email, reason: 'bad_password' } })
-      return false
-    }
-    user.value = toPublic(u)
-    token.value = u.uuid
-    saveSession({ user: user.value, token: token.value })
-    await recordAudit({
-      entity: 'auth',
-      action: 'auth.login_success',
-      entityId: u.id,
-      entityUuid: u.uuid,
-      meta: { email, role: u.role },
-    })
-    return true
   }
 
   /** Returns true when no users exist yet (first-time setup needed). */
   const needsSetup = async () => {
-    const users = await userRepo.list()
-    return users.length === 0
+    const res = await apiFetch('/auth/needs-setup')
+    return !!res?.needsSetup
   }
 
   /**
-   * First-time onboarding: create the owner user and seed demo data.
-   * Only works when the users table is empty.
+   * First-time onboarding: create the owner user. The server's /auth/setup
+   * endpoint refuses with 409 if any user already exists.
    */
   const createOwner = async (name, email, password) => {
-    const users = await userRepo.list()
-    if (users.length > 0) return false
-
-    const created = await userRepo.create({
-      email,
-      passwordHash: bcrypt.hashSync(password, 10),
-      role: 'owner',
-      name,
-    })
-
-    // Seed the rest of the demo data using this owner as the actor.
-    await withAuditDisabled(() => seedDatabase(created))
-
-    user.value = toPublic(created)
-    token.value = created.uuid
-    saveSession({ user: user.value, token: token.value })
-
-    await recordAudit({
-      entity: 'auth',
-      action: 'auth.setup_complete',
-      entityId: created.id,
-      entityUuid: created.uuid,
-      meta: { email, role: 'owner' },
-    })
-    return true
+    try {
+      const res = await apiFetch('/auth/setup', { method: 'POST', body: { name, email, password } })
+      user.value = res.user
+      token.value = res.token
+      saveSession({ user: user.value, token: token.value })
+      return true
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) return false
+      throw err
+    }
   }
 
   const forgotPassword = async (_email) => {
@@ -114,19 +74,35 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const logout = () => {
-    const previous = user.value
     user.value = null
     token.value = null
     saveSession(null)
-    if (previous) {
-      // Fire-and-forget; `logout` stays synchronous for callers.
-      recordAudit({
-        entity: 'auth',
-        action: 'auth.logout',
-        entityId: previous.id,
-        entityUuid: previous.uuid,
-        meta: { email: previous.email, role: previous.role },
-      })
+    // Fire-and-forget; the server records the audit event when the bearer
+    // token is still present on the request. We don't await it so callers
+    // can treat logout() as synchronous.
+    apiFetch('/auth/logout', { method: 'POST' }).catch(() => {})
+  }
+
+  /**
+   * Re-validate the persisted token against the server. Returns true if the
+   * token is still good (and refreshes `user` from /auth/me), false otherwise
+   * (in which case local state is cleared). Intended for SPA boot-up.
+   */
+  const rehydrate = async () => {
+    if (!token.value) return false
+    try {
+      const res = await apiFetch('/auth/me')
+      user.value = res.user
+      saveSession({ user: user.value, token: token.value })
+      return true
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        user.value = null
+        token.value = null
+        saveSession(null)
+        return false
+      }
+      throw err
     }
   }
 
@@ -141,5 +117,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     forgotPassword,
     logout,
+    rehydrate,
   }
 })

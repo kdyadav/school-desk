@@ -15,8 +15,6 @@ import {
   setAuditEnabled,
   withAuditDisabled,
 } from '../../src/audit'
-import { useAuthStore } from '../../src/stores/auth'
-
 const listAudit = () => db.table('auditLogs').toArray()
 
 describe('audit logger', () => {
@@ -160,42 +158,9 @@ describe('audit logger', () => {
     })
   })
 
-  describe('auth store events', () => {
-    beforeEach(async () => {
-      // seed a single admin user manually so we can test login events without
-      // pulling in the noisy full seed file
-      await userRepo.create({
-        email: 'admin@x.test',
-        passwordHash: (await import('bcryptjs')).default.hashSync('pw12345', 4),
-        role: 'admin',
-        name: 'Admin',
-      })
-    })
-
-    it('emits auth.login_success on a good login', async () => {
-      const auth = useAuthStore()
-      const ok = await auth.login('admin@x.test', 'pw12345')
-      expect(ok).toBe(true)
-      const logs = (await listAudit()).filter((l) => l.entity === 'auth')
-      expect(logs.some((l) => l.action === 'auth.login_success')).toBe(true)
-    })
-
-    it('emits auth.login_failed for unknown users and bad passwords', async () => {
-      const auth = useAuthStore()
-      await auth.login('nobody@x.test', 'whatever')
-      await auth.login('admin@x.test', 'wrongpw')
-      const failures = (await listAudit()).filter((l) => l.action === 'auth.login_failed')
-      expect(failures.map((f) => f.meta.reason).sort()).toEqual(['bad_password', 'unknown_user'])
-    })
-
-    it('emits auth.logout when a logged-in user signs out', async () => {
-      const auth = useAuthStore()
-      await auth.login('admin@x.test', 'pw12345')
-      auth.logout()
-      // logout's audit call is fire-and-forget; give it a tick to land.
-      await new Promise((r) => setTimeout(r, 20))
-      const logs = (await listAudit()).filter((l) => l.action === 'auth.logout')
-      expect(logs).toHaveLength(1)
-    })
-  })
+  // The 'auth store events' suite that lived here previously asserted that
+  // the client-side auth store wrote auditLogs rows for login/logout. That
+  // contract moved to the server in Phase 2.3 (server/src/auth/routes.js
+  // emits the audit rows via recordAudit and server/tests/auth.test.js
+  // covers the assertions). Removed here to avoid a redundant fake server.
 })

@@ -1,16 +1,69 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { db } from '../../src/db/dexie'
 import { useAuthStore } from '../../src/stores/auth'
-import { seedDatabase } from '../../src/db/seed'
+
+// Tiny in-memory stand-in for server/src/auth/routes.js. We mock global fetch
+// so the auth store exercises the real apiFetch helper (headers, JSON encode,
+// error envelope) end-to-end.
+const users = []
+
+const toPublic = (u) => ({
+  id: u.id, uuid: u.uuid, email: u.email, role: u.role,
+  name: u.name || u.email.split('@')[0], linkedId: u.linkedId ?? null,
+})
+
+const jsonResponse = (status, payload) => ({
+  ok: status < 400,
+  status,
+  headers: { get: (h) => (h.toLowerCase() === 'content-type' ? 'application/json' : null) },
+  text: async () => JSON.stringify(payload),
+})
+
+function fakeServer(input, init = {}) {
+  const url = typeof input === 'string' ? input : input.url
+  const path = url.replace(/^https?:\/\/[^/]+/, '').replace(/\?.*$/, '')
+  const method = (init.method || 'GET').toUpperCase()
+  const body = init.body ? JSON.parse(init.body) : null
+
+  if (path === '/auth/needs-setup' && method === 'GET') {
+    return Promise.resolve(jsonResponse(200, { needsSetup: users.length === 0 }))
+  }
+  if (path === '/auth/setup' && method === 'POST') {
+    if (users.length > 0) return Promise.resolve(jsonResponse(409, { error: 'already_initialised' }))
+    const u = {
+      id: users.length + 1, uuid: `uuid-${users.length + 1}`, role: 'owner',
+      email: body.email, name: body.name, linkedId: null, _pw: body.password,
+    }
+    users.push(u)
+    return Promise.resolve(jsonResponse(200, { token: `token-${u.id}`, user: toPublic(u) }))
+  }
+  if (path === '/auth/login' && method === 'POST') {
+    const u = users.find((x) => x.email === body.email)
+    if (!u || u._pw !== body.password) {
+      return Promise.resolve(jsonResponse(401, { error: 'invalid_credentials' }))
+    }
+    return Promise.resolve(jsonResponse(200, { token: `token-${u.id}`, user: toPublic(u) }))
+  }
+  if (path === '/auth/logout' && method === 'POST') {
+    return Promise.resolve(jsonResponse(200, { ok: true }))
+  }
+  return Promise.resolve(jsonResponse(404, { error: 'not_found' }))
+}
+
+const seedOwner = (email = 'owner@school.local', password = 'owner123') => {
+  users.push({
+    id: users.length + 1, uuid: `uuid-${users.length + 1}`, role: 'owner',
+    email, name: 'Owner', linkedId: null, _pw: password,
+  })
+}
 
 describe('auth store', () => {
-  beforeEach(async () => {
-    await db.delete()
-    await db.open()
+  beforeEach(() => {
+    users.length = 0
     localStorage.clear()
     setActivePinia(createPinia())
-    await seedDatabase()
+    vi.stubGlobal('fetch', vi.fn(fakeServer))
+    seedOwner()
   })
 
   it('logs in the seeded owner with correct credentials', async () => {
@@ -60,12 +113,12 @@ describe('auth store', () => {
 })
 
 describe('owner onboarding', () => {
-  beforeEach(async () => {
-    await db.delete()
-    await db.open()
+  beforeEach(() => {
+    users.length = 0
     localStorage.clear()
     setActivePinia(createPinia())
-    // No seed — empty DB
+    vi.stubGlobal('fetch', vi.fn(fakeServer))
+    // No seed — empty user table
   })
 
   it('needsSetup returns true on empty DB', async () => {
@@ -73,7 +126,7 @@ describe('owner onboarding', () => {
     expect(await auth.needsSetup()).toBe(true)
   })
 
-  it('createOwner creates owner, seeds data, and logs in', async () => {
+  it('createOwner creates owner and logs in', async () => {
     const auth = useAuthStore()
     const ok = await auth.createOwner('Test Owner', 'owner@test.local', 'password123')
     expect(ok).toBe(true)
@@ -82,14 +135,13 @@ describe('owner onboarding', () => {
     expect(auth.user.email).toBe('owner@test.local')
     expect(auth.user.name).toBe('Test Owner')
     expect(JSON.parse(localStorage.getItem('school.session'))).toBeTruthy()
-    // Seed data should have been created
     expect(await auth.needsSetup()).toBe(false)
   })
 
   it('createOwner fails if users already exist', async () => {
     const auth = useAuthStore()
     await auth.createOwner('First Owner', 'first@test.local', 'password123')
-    // Reset pinia to clear in-memory state
+    // Reset pinia + localStorage so the second store starts unauthenticated.
     setActivePinia(createPinia())
     localStorage.clear()
     const auth2 = useAuthStore()

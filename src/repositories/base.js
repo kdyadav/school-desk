@@ -94,7 +94,6 @@ export function createRepo(tableName, schema, opts = {}) {
     list: (opts) => adapter.list(tableName, opts),
     get: (id) => adapter.get(tableName, id),
     getByUuid: (uuid) => adapter.getByUuid(tableName, uuid),
-    query: (predicate) => adapter.query(tableName, predicate),
     where: (field, value) => adapter.where(tableName, field, value),
     count: () => adapter.count(tableName),
 
