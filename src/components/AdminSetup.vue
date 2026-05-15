@@ -233,15 +233,15 @@ const handleSetup = async () => {
     if (!validateOwner()) { loading.value = false; return }
 
     try {
-        // Persist the school profile first so seed/audit happen against the
-        // correct branding. createOwner stays unchanged.
-        await schoolStore.save(buildSchoolPatch())
+        // Create the owner first so the bearer token is in place before we
+        // hit the auth-gated /schoolProfile endpoint to persist branding.
         const ok = await authStore.createOwner(owner.name, owner.email, owner.password)
-        if (ok) {
-            router.push({ name: 'Dashboard' })
-        } else {
+        if (!ok) {
             error.value = 'Setup failed. An owner account may already exist.'
+            return
         }
+        await schoolStore.save(buildSchoolPatch())
+        router.push({ name: 'Dashboard' })
     } catch (err) {
         error.value = 'Setup failed. Please try again.'
         console.error(err)
