@@ -95,6 +95,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useSchoolStore } from '../stores/school'
 import { useForm } from '../ui-lib/useForm'
 import { required, email as emailValidator, minLength } from '../ui-lib/validators'
 import BaseInput from '../ui-lib/BaseInput.vue'
@@ -104,6 +105,7 @@ import BaseCheckbox from '../ui-lib/BaseCheckbox.vue'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const schoolStore = useSchoolStore()
 
 const { email, password, rememberMe, errors, isValid, validateField, validateAll, setField } = useForm(
     { email: '', password: '', rememberMe: false },
@@ -129,6 +131,7 @@ const handleLogin = async () => {
     try {
         const success = await authStore.login(email.value, password.value)
         if (success) {
+            try { await schoolStore.load() } catch { /* keep defaults */ }
             const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
             router.push(redirect || { name: 'Dashboard' })
         } else {

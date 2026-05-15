@@ -229,8 +229,10 @@ router.beforeEach(async (to) => {
   const school = useSchoolStore()
 
   // Lazy-load the tenant profile once per session so navigation stays cheap
-  // and offline-first while branding follows the configured profile.
-  if (!school.loaded) {
+  // and offline-first while branding follows the configured profile. The
+  // endpoint is auth-gated, so skip it for logged-out visitors (login,
+  // setup, public site routes) — defaults from siteConfig keep rendering.
+  if (!school.loaded && auth.isAuthenticated) {
     try { await school.load() } catch { /* keep defaults */ }
   }
 
