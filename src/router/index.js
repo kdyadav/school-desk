@@ -275,7 +275,7 @@ router.afterEach((to) => {
   if (typeof document !== 'undefined') {
     document.title = composeTitle(to.meta?.title, profile.schoolName)
   }
-  applyFavicon(profile.faviconDataUrl || profile.logoDataUrl || null)
+  applyFavicon(profile.faviconUrl || profile.logoUrl || null)
   applyPrimaryColor(profile.primaryColor)
 })
 

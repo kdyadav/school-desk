@@ -52,7 +52,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">Logo (optional)</label>
                             <div class="flex items-center gap-3">
                                 <div class="w-14 h-14 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
-                                    <img v-if="school.logoDataUrl" :src="school.logoDataUrl" alt="Logo preview"
+                                    <img v-if="logoPreview" :src="logoPreview" alt="Logo preview"
                                         class="w-full h-full object-cover" />
                                     <span v-else class="text-[10px] text-slate-400">No logo</span>
                                 </div>
@@ -61,10 +61,10 @@
                                         @change="onPickLogo" />
                                     <button type="button" @click="logoInput?.click()"
                                         class="px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-50">
-                                        {{ school.logoDataUrl ? 'Replace' : 'Upload image' }}
+                                        {{ logoPreview ? 'Replace' : 'Upload image' }}
                                     </button>
-                                    <button v-if="school.logoDataUrl" type="button"
-                                        @click="setSchool('logoDataUrl', null)"
+                                    <button v-if="logoPreview" type="button"
+                                        @click="clearLogo"
                                         class="px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-700">
                                         Remove
                                     </button>
@@ -136,7 +136,7 @@ import BaseInput from '../ui-lib/BaseInput.vue'
 import BaseTextarea from '../ui-lib/BaseTextarea.vue'
 import BaseButton from '../ui-lib/BaseButton.vue'
 import BrandMark from './BrandMark.vue'
-import { fileToDataUrl } from '../composables/useBranding'
+import { uploadBrandingImage } from '../composables/useBranding'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -149,6 +149,17 @@ const logoError = ref('')
 const logoInput = ref(null)
 const MAX_LOGO_BYTES = 1024 * 1024
 
+// Logo upload requires an authenticated admin session, which we only have
+// after step 2. Until then we keep the chosen file in memory and show a
+// local object URL preview.
+const logoFile = ref(null)
+const logoPreview = ref('')
+const clearLogo = () => {
+    if (logoPreview.value) URL.revokeObjectURL(logoPreview.value)
+    logoFile.value = null
+    logoPreview.value = ''
+}
+
 const {
     values: school, errors: schoolErrors,
     setField: setSchool, touch: touchSchool, validateAll: validateSchool,
@@ -156,7 +167,7 @@ const {
     {
         schoolName: '', shortName: '', tagline: '', established: '',
         phone: '', contactEmail: '', address: '',
-        logoDataUrl: null, primaryColor: '#4f46e5',
+        primaryColor: '#4f46e5',
     },
     {
         schoolName: [required],
@@ -178,28 +189,22 @@ const {
     }
 )
 
-const onPickLogo = async (e) => {
+const onPickLogo = (e) => {
     logoError.value = ''
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
     if (!file.type.startsWith('image/')) {
         logoError.value = 'Please choose an image file.'
-        e.target.value = ''
         return
     }
     if (file.size > MAX_LOGO_BYTES) {
         logoError.value = 'Image is too large (max 1 MB).'
-        e.target.value = ''
         return
     }
-    try {
-        const dataUrl = await fileToDataUrl(file)
-        setSchool('logoDataUrl', dataUrl)
-    } catch {
-        logoError.value = 'Could not read that file.'
-    } finally {
-        e.target.value = ''
-    }
+    clearLogo()
+    logoFile.value = file
+    logoPreview.value = URL.createObjectURL(file)
 }
 
 const handleSchoolNext = () => {
@@ -208,7 +213,7 @@ const handleSchoolNext = () => {
 }
 
 // Build the persisted school-profile patch from the wizard's flat shape.
-const buildSchoolPatch = () => {
+const buildSchoolPatch = (logoUrl) => {
     const addressLines = (school.address || '')
         .split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
     return {
@@ -222,7 +227,7 @@ const buildSchoolPatch = () => {
             email: school.contactEmail?.trim() || '',
             officeHours: '',
         },
-        logoDataUrl: school.logoDataUrl || null,
+        logoUrl: logoUrl || null,
         primaryColor: school.primaryColor || '#4f46e5',
     }
 }
@@ -233,14 +238,25 @@ const handleSetup = async () => {
     if (!validateOwner()) { loading.value = false; return }
 
     try {
-        // Create the owner first so the bearer token is in place before we
-        // hit the auth-gated /schoolProfile endpoint to persist branding.
+        // Create the owner first so the Supabase session exists before we
+        // write to the school_profile table (admin-only RLS) or upload the
+        // logo to the branding bucket.
         const ok = await authStore.createOwner(owner.name, owner.email, owner.password)
         if (!ok) {
             error.value = 'Setup failed. An owner account may already exist.'
             return
         }
-        await schoolStore.save(buildSchoolPatch())
+        let logoUrl = null
+        if (logoFile.value) {
+            try {
+                const up = await uploadBrandingImage(logoFile.value, 'logo')
+                logoUrl = up.url
+            } catch (e) {
+                console.warn('[setup] logo upload failed:', e?.message || e)
+            }
+        }
+        await schoolStore.save(buildSchoolPatch(logoUrl))
+        clearLogo()
         router.push({ name: 'Dashboard' })
     } catch (err) {
         error.value = 'Setup failed. Please try again.'

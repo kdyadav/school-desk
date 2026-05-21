@@ -1,10 +1,24 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import bcrypt from 'bcryptjs'
 import { userRepo } from '../repositories'
+import { supabase, supabaseSignupClient } from '../supabase'
 import { useAuthStore } from './auth'
 
 const PRIVILEGED_ROLES = ['owner', 'admin']
+
+// The "users" surface in the UI now manages `public.profiles`. Credentials
+// live in Supabase Auth (auth.users); creating a new account therefore
+// involves both an auth signup and a pending_invites row so the DB trigger
+// knows which role to assign.
+//
+// Limitations vs. the old Fastify backend:
+//   * Direct password updates require service_role privileges. We surface
+//     the equivalent affordance via `resetPasswordForEmail`, which sends the
+//     user a reset link.
+//   * Hard-deleting auth.users requires service_role too. `deleteUser`
+//     removes the profile row; the orphaned auth.users entry can no longer
+//     log in (no profile → role resolution fails) and can be cleaned up
+//     from the Supabase dashboard if desired.
 
 export const useUsersStore = defineStore('users', () => {
   const users = ref([])
@@ -40,15 +54,31 @@ export const useUsersStore = defineStore('users', () => {
     if (existing.length) {
       throw new Error('A user with this email already exists.')
     }
-    const created = await userRepo.create({
+
+    // Pre-register the role so the on_auth_user_created trigger picks it up
+    // when the signup completes below.
+    {
+      const { error: e } = await supabase
+        .from('pending_invites')
+        .upsert({ email, role, name: name || null, linkedId: linkedId || null }, { onConflict: 'email' })
+      if (e) throw new Error(e.message)
+    }
+
+    // Use the secondary client (no session persistence) so signing the new
+    // user up does NOT replace the current admin's session.
+    const { error: signErr } = await supabaseSignupClient.auth.signUp({
       email,
-      passwordHash: bcrypt.hashSync(password, 10),
-      role,
-      name,
-      linkedId: linkedId || null,
+      password,
+      options: { data: { name, role } },
     })
+    if (signErr) {
+      // Roll back the invite so a retry can succeed.
+      await supabase.from('pending_invites').delete().eq('email', email)
+      throw new Error(signErr.message)
+    }
+
     await loadAll()
-    return created
+    return users.value.find((u) => u.email === email) || null
   }
 
   async function updateUser(id, { name, role, linkedId, password }) {
@@ -70,10 +100,16 @@ export const useUsersStore = defineStore('users', () => {
     }
 
     const patch = { name, role, linkedId: linkedId || null }
-    if (password) {
-      patch.passwordHash = bcrypt.hashSync(password, 10)
-    }
     const updated = await userRepo.update(id, patch)
+
+    // The UI's edit drawer accepts a new password, but client-side we can't
+    // overwrite an auth.users password without the service-role key. Best we
+    // can do is trigger Supabase's email-based reset flow for the user.
+    if (password) {
+      const { error: e } = await supabase.auth.resetPasswordForEmail(target.email)
+      if (e) console.warn('[users] resetPasswordForEmail failed:', e.message)
+    }
+
     await loadAll()
     return updated
   }

@@ -46,17 +46,17 @@
                     </label>
                     <div class="flex items-center gap-3">
                         <div class="w-16 h-16 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-                            <img v-if="form.logoDataUrl" :src="form.logoDataUrl" alt="Logo" class="w-full h-full object-cover" />
+                            <img v-if="logoPreview" :src="logoPreview" alt="Logo" class="w-full h-full object-cover" />
                             <span v-else class="text-[10px] text-slate-400">No logo</span>
                         </div>
                         <div class="flex flex-col gap-1.5">
                             <input ref="logoInput" type="file" accept="image/*" class="hidden" @change="onPickLogo" />
                             <button type="button" @click="logoInput?.click()"
                                 class="px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800">
-                                {{ form.logoDataUrl ? 'Replace' : 'Upload' }}
+                                {{ logoPreview ? 'Replace' : 'Upload' }}
                             </button>
-                            <button v-if="form.logoDataUrl" type="button"
-                                @click="setField('logoDataUrl', null)"
+                            <button v-if="logoPreview" type="button"
+                                @click="clearLogo"
                                 class="px-3 py-1 text-xs font-medium text-slate-500 hover:text-red-600">
                                 Remove
                             </button>
@@ -89,11 +89,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useSchoolStore } from '../../stores/school'
 import { useForm } from '../../ui-lib/useForm'
 import { required, email as emailValidator } from '../../ui-lib/validators'
-import { fileToDataUrl } from '../../composables/useBranding'
+import { uploadBrandingImage } from '../../composables/useBranding'
 import BaseInput from '../../ui-lib/BaseInput.vue'
 import BaseTextarea from '../../ui-lib/BaseTextarea.vue'
 import BaseButton from '../../ui-lib/BaseButton.vue'
@@ -106,11 +106,25 @@ const logoInput = ref(null)
 const logoError = ref('')
 const MAX_LOGO_BYTES = 1024 * 1024
 
+// Logo state: `form.logoUrl` is the persisted URL; `pendingFile` is a
+// not-yet-uploaded File chosen in this session; `logoPreview` derives from
+// whichever is current.
+const pendingFile = ref(null)
+const pendingPreview = ref('')
+const logoPreview = computed(() => pendingPreview.value || form.logoUrl || '')
+
+const clearLogo = () => {
+    if (pendingPreview.value) URL.revokeObjectURL(pendingPreview.value)
+    pendingFile.value = null
+    pendingPreview.value = ''
+    setField('logoUrl', null)
+}
+
 const { values: form, errors, setField, touch, validateAll, reset } = useForm(
     {
         schoolName: '', shortName: '', tagline: '', established: '',
         phone: '', contactEmail: '', officeHours: '', address: '',
-        logoDataUrl: null, primaryColor: '#4f46e5',
+        logoUrl: null, primaryColor: '#4f46e5',
     },
     {
         schoolName: [required],
@@ -129,7 +143,7 @@ const hydrate = () => {
     setField('contactEmail', p.contact?.email || '')
     setField('officeHours', p.contact?.officeHours || '')
     setField('address', (p.contact?.addressLines || []).join('\n'))
-    setField('logoDataUrl', p.logoDataUrl || null)
+    setField('logoUrl', p.logoUrl || null)
     setField('primaryColor', p.primaryColor || '#4f46e5')
 }
 
@@ -138,21 +152,32 @@ onMounted(async () => {
     hydrate()
 })
 
-const onPickLogo = async (e) => {
+const onPickLogo = (e) => {
     logoError.value = ''
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
-    if (!file.type.startsWith('image/')) { logoError.value = 'Please choose an image file.'; e.target.value = ''; return }
-    if (file.size > MAX_LOGO_BYTES) { logoError.value = 'Image is too large (max 1 MB).'; e.target.value = ''; return }
-    try { setField('logoDataUrl', await fileToDataUrl(file)) }
-    catch { logoError.value = 'Could not read that file.' }
-    finally { e.target.value = '' }
+    if (!file.type.startsWith('image/')) { logoError.value = 'Please choose an image file.'; return }
+    if (file.size > MAX_LOGO_BYTES) { logoError.value = 'Image is too large (max 1 MB).'; return }
+    if (pendingPreview.value) URL.revokeObjectURL(pendingPreview.value)
+    pendingFile.value = file
+    pendingPreview.value = URL.createObjectURL(file)
 }
 
 const onSave = async () => {
     if (!validateAll()) return
     saving.value = true
     try {
+        let logoUrl = form.logoUrl
+        if (pendingFile.value) {
+            try {
+                const up = await uploadBrandingImage(pendingFile.value, 'logo')
+                logoUrl = up.url
+            } catch (e) {
+                logoError.value = e?.message || 'Logo upload failed.'
+                return
+            }
+        }
         const addressLines = (form.address || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
         await school.save({
             schoolName: form.schoolName.trim(),
@@ -165,9 +190,12 @@ const onSave = async () => {
                 email: form.contactEmail?.trim() || '',
                 officeHours: form.officeHours?.trim() || '',
             },
-            logoDataUrl: form.logoDataUrl || null,
+            logoUrl: logoUrl || null,
             primaryColor: form.primaryColor || '#4f46e5',
         })
+        setField('logoUrl', logoUrl || null)
+        if (pendingPreview.value) { URL.revokeObjectURL(pendingPreview.value); pendingPreview.value = '' }
+        pendingFile.value = null
         savedAt.value = new Date().toLocaleTimeString()
     } finally {
         saving.value = false

@@ -23,7 +23,7 @@ const props = defineProps({
 
 const school = useSchoolStore()
 
-const logo = computed(() => school.profile?.logoDataUrl || null)
+const logo = computed(() => school.profile?.logoUrl || null)
 const alt = computed(() => school.profile?.schoolName || 'School')
 
 const initials = computed(() => {

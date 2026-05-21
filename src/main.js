@@ -19,7 +19,9 @@ app.use(uiLib)
 
 // The audit logger needs to know who performed each action. Resolve the actor
 // lazily from the auth store on every call so the onboarding can happen
-// before any user has logged in.
+// before any user has logged in. Auth events (login/logout/signup) are the
+// only client-side audit writes left — CRUD audit is handled by Postgres
+// triggers (see supabase/migrations/0001_init.sql).
 const auth = useAuthStore()
 setAuditActorProvider(() => {
     const u = auth.user
@@ -27,4 +29,8 @@ setAuditActorProvider(() => {
     return { id: u.id, role: u.role, name: u.name }
 })
 
-app.mount('#app')
+// Bring the Supabase session back into the Pinia store before the first
+// router navigation runs so route guards see the right authenticated state.
+auth.rehydrate().finally(() => {
+    app.mount('#app')
+})

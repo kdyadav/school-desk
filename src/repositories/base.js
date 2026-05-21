@@ -1,19 +1,19 @@
+// Thin repository facade over the Supabase adapter. Audit rows and field
+// redaction are emitted by Postgres triggers (see supabase/migrations), so
+// the client no longer writes audit entries for CRUD operations — only for
+// the auth/* events handled in src/stores/auth.js.
+
 import { v4 as uuidv4 } from 'uuid'
-import { dexieAdapter } from './adapters/dexie'
-import { httpAdapter } from './adapters/http'
-import { recordAudit, changedFields } from '../audit/logger'
+import { supabaseAdapter } from './adapters/supabase'
 
-const ADAPTER_NAME = import.meta.env?.VITE_DATA_ADAPTER || 'dexie'
-
-const adapters = {
-  dexie: dexieAdapter,
-  http: httpAdapter,
-}
-
-export const adapter = adapters[ADAPTER_NAME] || dexieAdapter
+export const adapter = supabaseAdapter
 
 const nowIso = () => new Date().toISOString()
 
+// Server-side defaults (gen_random_uuid(), now(), id sequence) would handle
+// these too, but stamping them client-side keeps the create() return shape
+// stable even for callers that read the local copy before round-tripping
+// through PostgREST.
 const stamp = (data, { isCreate }) => {
   const out = { ...data }
   if (isCreate) {
@@ -28,14 +28,9 @@ const stamp = (data, { isCreate }) => {
  * Build a repository for `tableName`.
  *
  * @param {string} tableName
- * @param {object} schema    Zod schema (optional)
- * @param {object} [opts]
- * @param {boolean} [opts.audit=true]  Emit audit-log entries on writes.
- * @param {string[]} [opts.redact=[]]  Field names to redact in audit entries.
+ * @param {object} [schema]   Zod schema (optional; validates writes when given).
  */
-export function createRepo(tableName, schema, opts = {}) {
-  const { audit = true, redact = [] } = opts
-
+export function createRepo(tableName, schema /* , opts unused — audit/redact are server-side */) {
   const validateFull = (data) => {
     if (!schema) return data
     const result = schema.safeParse(data)
@@ -45,47 +40,6 @@ export function createRepo(tableName, schema, opts = {}) {
       throw err
     }
     return result.data
-  }
-
-  // Audit emitters are intentionally fire-and-forget at the call site: we
-  // await them so writes are sequenced, but failures are swallowed inside
-  // recordAudit() so the user-facing operation always succeeds.
-  const auditCreate = async (after) => {
-    if (!audit) return
-    await recordAudit({
-      entity: tableName,
-      action: 'entity.created',
-      entityId: after?.id ?? null,
-      entityUuid: after?.uuid ?? null,
-      after,
-      redact,
-    })
-  }
-
-  const auditUpdate = async (before, after) => {
-    if (!audit) return
-    const changes = changedFields(before, after, { redact })
-    if (Object.keys(changes).length === 0) return
-    await recordAudit({
-      entity: tableName,
-      action: 'entity.updated',
-      entityId: after?.id ?? before?.id ?? null,
-      entityUuid: after?.uuid ?? before?.uuid ?? null,
-      changes,
-      redact,
-    })
-  }
-
-  const auditRemove = async (before) => {
-    if (!audit) return
-    await recordAudit({
-      entity: tableName,
-      action: 'entity.deleted',
-      entityId: before?.id ?? null,
-      entityUuid: before?.uuid ?? null,
-      before,
-      redact,
-    })
   }
 
   return {
@@ -100,9 +54,7 @@ export function createRepo(tableName, schema, opts = {}) {
     async create(data) {
       const stamped = stamp(data, { isCreate: true })
       const validated = validateFull(stamped)
-      const created = await adapter.create(tableName, validated)
-      await auditCreate(created)
-      return created
+      return adapter.create(tableName, validated)
     },
 
     async update(id, patch) {
@@ -110,16 +62,12 @@ export function createRepo(tableName, schema, opts = {}) {
       if (!current) throw new Error(`${tableName} #${id} not found`)
       const merged = stamp({ ...current, ...patch, id: current.id, uuid: current.uuid }, { isCreate: false })
       const validated = validateFull(merged)
-      const updated = await adapter.update(tableName, id, validated)
-      await auditUpdate(current, updated)
-      return updated
+      return adapter.update(tableName, id, validated)
     },
 
     async remove(id) {
-      const current = await adapter.get(tableName, id)
-      const result = await adapter.remove(tableName, id)
-      if (current) await auditRemove(current)
-      return result
+      await adapter.remove(tableName, id)
+      return true
     },
   }
 }

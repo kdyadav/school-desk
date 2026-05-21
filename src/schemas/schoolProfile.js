@@ -6,11 +6,9 @@ const hexColor = z
   .string()
   .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Expected a hex color like #4f46e5')
 
-// Data URLs (logo, favicon) are stored inline. Restrict to image/* to avoid
-// accidentally persisting arbitrary file types in the singleton profile row.
-const imageDataUrl = z
-  .string()
-  .regex(/^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/, 'Expected an image data URL')
+// Logo + favicon URLs returned by Supabase Storage. Public URLs are http(s);
+// the schema also accepts blank strings for the "unset" state.
+const imageUrl = z.string().url().or(z.literal(''))
 
 const navItem = z.object({
   label: z.string().min(1).max(60),
@@ -42,9 +40,9 @@ export const schoolProfileSchema = z.object({
   social: z.array(socialLink).max(20).default([]),
   nav: z.array(navItem).max(20).default([]),
 
-  // Branding
-  logoDataUrl: imageDataUrl.nullable().optional(),
-  faviconDataUrl: imageDataUrl.nullable().optional(),
+  // Branding — public URLs of the assets stored in the `branding` bucket.
+  logoUrl: imageUrl.nullable().optional(),
+  faviconUrl: imageUrl.nullable().optional(),
   primaryColor: hexColor.optional().default('#4f46e5'),
 
   // Locale-ish hints (UI doesn't enforce yet but stored for downstream use).

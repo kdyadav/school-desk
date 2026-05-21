@@ -1,21 +1,18 @@
-// Centralised audit-log writer. Keep this module dependency-light: it must not
-// import from stores or repositories at the top level (would create cycles).
-// Actor info is supplied through a registered provider (wired in main.js).
+// Client-side audit writer. After the Supabase migration, CRUD operations are
+// audited by Postgres triggers (see supabase/migrations/0001_init.sql); the
+// only events this module still emits are the auth.* lifecycle events
+// (login_success, login_failed, logout, register_success, register_failed).
+//
+// RLS denies plain INSERTs to audit_logs, so auth events are written through
+// a SECURITY DEFINER RPC `public.record_auth_event(...)` that bypasses RLS.
+// The helper falls back to a silent no-op if the RPC is unavailable so a
+// broken audit pipeline never blocks a sign-in.
 
-import { db } from '../db/dexie'
-import { v4 as uuidv4 } from 'uuid'
+import { supabase } from '../supabase'
 
-// ── Defaults that callers can override ───────────────────────────────────────
-
-// Fields that change on every write; never useful in a diff.
-const ALWAYS_IGNORED = new Set(['updatedAt'])
-
-// Fields that should never be persisted in clear text in the log.
 const DEFAULT_REDACT = new Set(['passwordHash', 'password', 'token'])
-
+const ALWAYS_IGNORED = new Set(['updatedAt'])
 const REDACTED = '[redacted]'
-
-// ── Module state (kept tiny + test-friendly) ─────────────────────────────────
 
 let enabled = true
 let actorProvider = () => null
@@ -26,14 +23,11 @@ export const setAuditActorProvider = (fn) => {
   actorProvider = typeof fn === 'function' ? fn : () => null
 }
 
-/** Run an async block with auditing temporarily disabled (e.g. seeding). */
 export async function withAuditDisabled(fn) {
   const prev = enabled
   enabled = false
   try { return await fn() } finally { enabled = prev }
 }
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 const resolveActor = () => {
   try {
@@ -49,19 +43,16 @@ const resolveActor = () => {
   }
 }
 
-const redactObject = (obj, redactSet) => {
-  if (!obj || typeof obj !== 'object') return obj
-  const out = {}
-  for (const k of Object.keys(obj)) {
-    out[k] = redactSet.has(k) ? REDACTED : obj[k]
-  }
-  return out
+const shallowEqual = (a, b) => {
+  if (a === b) return true
+  if (a == null || b == null) return a === b
+  if (typeof a !== typeof b) return false
+  if (typeof a !== 'object') return false
+  try { return JSON.stringify(a) === JSON.stringify(b) } catch { return false }
 }
 
-/**
- * Compute a shallow diff between two row snapshots.
- * Returns { [field]: { before, after } } only for changed keys.
- */
+// Kept exported so any future client-side caller can compute diffs that match
+// the server-side trigger's shape. Not used by the repository layer anymore.
 export function changedFields(before, after, { ignore = [], redact = [] } = {}) {
   const ignoreSet = new Set([...ALWAYS_IGNORED, ...ignore])
   const redactSet = new Set([...DEFAULT_REDACT, ...redact])
@@ -84,64 +75,40 @@ export function changedFields(before, after, { ignore = [], redact = [] } = {}) 
   return out
 }
 
-const shallowEqual = (a, b) => {
-  if (a === b) return true
-  if (a == null || b == null) return a === b
-  if (typeof a !== typeof b) return false
-  if (typeof a !== 'object') return false
-  try { return JSON.stringify(a) === JSON.stringify(b) } catch { return false }
-}
-
-// ── Public API ───────────────────────────────────────────────────────────────
-
 /**
  * Persist a single audit entry. Best-effort: failures are swallowed so a
  * broken audit pipeline never blocks a user action.
+ *
+ * In the Supabase build this is only used for `entity === 'auth'` rows; CRUD
+ * audit happens server-side via triggers.
  */
 export async function recordAudit({
   entity,
   action,
   entityId = null,
   entityUuid = null,
-  before = null,
-  after = null,
-  changes = null,
-  redact = [],
   meta = null,
 } = {}) {
   if (!enabled) return null
   if (!entity || !action) return null
 
-  const redactSet = new Set([...DEFAULT_REDACT, ...redact])
-  const safeBefore = before ? redactObject(before, redactSet) : null
-  const safeAfter = after ? redactObject(after, redactSet) : null
-  const safeChanges = changes
-    ? Object.fromEntries(Object.entries(changes).map(([k, v]) => ([
-      k,
-      redactSet.has(k)
-        ? { before: REDACTED, after: REDACTED }
-        : v,
-    ])))
-    : null
-
   const actor = resolveActor()
-  const row = {
-    uuid: uuidv4(),
-    entity,
-    entityId,
-    entityUuid,
-    action,
-    ...actor,
-    changes: safeChanges,
-    before: safeBefore,
-    after: safeAfter,
-    meta,
-    createdAt: new Date().toISOString(),
-  }
-
   try {
-    const id = await db.table('auditLogs').add(row)
-    return { ...row, id }
+    const { error } = await supabase.rpc('record_auth_event', {
+      p_entity:      entity,
+      p_action:      action,
+      p_entity_id:   entityId,
+      p_entity_uuid: entityUuid,
+      p_actor_id:    actor.actorId,
+      p_actor_role:  actor.actorRole,
+      p_actor_name:  actor.actorName,
+      p_meta:        meta,
+    })
+    if (error) {
+      if (typeof console !== 'undefined') console.warn('[audit] rpc failed:', error.message)
+      return null
+    }
+    return { entity, action, ...actor, meta, entityId, entityUuid }
   } catch (err) {
     if (typeof console !== 'undefined') console.warn('[audit] write failed:', err)
     return null

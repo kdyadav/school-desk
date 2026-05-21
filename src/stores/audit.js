@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { db } from '../db/dexie'
+import { supabaseAdapter } from '../repositories/adapters/supabase'
 import { auditRepo } from '../repositories'
 
 const DEFAULT_FILTERS = () => ({
@@ -36,35 +36,27 @@ export const useAuditStore = defineStore('audit', () => {
     page.value = Math.min(Math.max(1, p), pageCount.value)
   }
 
-  // Build a Dexie query that uses the most selective index available, then
-  // applies remaining filters via .filter(). Always sorts newest-first.
+  // Paginate + filter server-side via the Supabase adapter; the envelope
+  // matches the previous Fastify response shape so the view stays the same.
   async function load() {
     loading.value = true
     error.value = null
     try {
       const f = filters.value
-      let coll
-      const t = db.table('auditLogs')
-      if (f.entity && f.actorId) {
-        coll = t.filter((r) => r.entity === f.entity && r.actorId === f.actorId)
-      } else if (f.entity) {
-        coll = t.where('entity').equals(f.entity)
-      } else if (f.actorId != null) {
-        coll = t.where('actorId').equals(f.actorId)
-      } else {
-        coll = t.toCollection()
-      }
-      coll = coll.filter((r) => {
-        if (f.action && r.action !== f.action) return false
-        if (f.since && r.createdAt < f.since) return false
-        if (f.until && r.createdAt > f.until + 'T23:59:59.999Z') return false
-        return true
+      const where = {}
+      if (f.entity) where.entity = f.entity
+      if (f.actorId != null && f.actorId !== '') where.actorId = f.actorId
+      const offset = (page.value - 1) * pageSize.value
+      const { rows, total: t } = await supabaseAdapter.audit.list('auditLogs', {
+        where,
+        action: f.action || undefined,
+        since: f.since || undefined,
+        until: f.until || undefined,
+        limit: pageSize.value,
+        offset,
       })
-      const all = await coll.toArray()
-      all.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-      total.value = all.length
-      const start = (page.value - 1) * pageSize.value
-      items.value = all.slice(start, start + pageSize.value)
+      items.value = rows
+      total.value = t
     } catch (e) {
       error.value = e
       throw e
@@ -73,19 +65,20 @@ export const useAuditStore = defineStore('audit', () => {
     }
   }
 
-  /** Hard-delete every audit row. Admin-only at the call site. */
+  /** Hard-delete every audit row. Admin-only at the call site (RLS enforces it). */
   async function clearAll() {
-    await db.table('auditLogs').clear()
+    await supabaseAdapter.audit.clearAll()
     items.value = []
     total.value = 0
   }
 
   /** Convenience: load logs for a single entity row. */
   async function loadForEntity(entity, entityId) {
-    const rows = await db.table('auditLogs')
-      .where('[entity+entityId]').equals([entity, entityId])
-      .toArray()
-    rows.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+    const { rows } = await supabaseAdapter.audit.list('auditLogs', {
+      where: { entity, entityId },
+      limit: 200,
+      offset: 0,
+    })
     items.value = rows
     total.value = rows.length
     return rows

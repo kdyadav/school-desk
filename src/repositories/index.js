@@ -43,19 +43,17 @@ export const feeStructureRepo = createRepo('feeStructures', feeStructureSchema)
 export const invoiceRepo = createRepo('invoices', invoiceSchema)
 export const paymentRepo = createRepo('payments', paymentSchema)
 export const announcementRepo = createRepo('announcements', announcementSchema)
-// Users hold credentials — keep audit on but redact secret fields.
-export const userRepo = createRepo('users', userSchema, { redact: ['passwordHash'] })
-// The audit log table itself is never audited (avoids infinite recursion).
-export const auditRepo = createRepo('auditLogs', auditLogSchema, { audit: false })
+// `users` API name → `profiles` Postgres table; Supabase Auth owns credentials.
+export const userRepo = createRepo('users', userSchema)
+// Audit rows are written by Postgres triggers; the repo here is read-only.
+export const auditRepo = createRepo('auditLogs', auditLogSchema)
 
 export const salaryStructureRepo = createRepo('salaryStructures', salaryStructureSchema)
 export const payslipRepo = createRepo('payslips', payslipSchema)
 export const salaryPaymentRepo = createRepo('salaryPayments', salaryPaymentSchema)
 
-// School profile is a singleton row keyed on `key=1`. Logos/favicons live as
-// data URLs and are large/noisy in audit diffs, so redact them.
-export const schoolProfileRepo = createRepo('schoolProfile', schoolProfileSchema, {
-  redact: ['logoDataUrl', 'faviconDataUrl'],
-})
+// School profile is a singleton row keyed on `key=1`. Logos/favicons live in
+// Supabase Storage; the row only stores the public URLs.
+export const schoolProfileRepo = createRepo('schoolProfile', schoolProfileSchema)
 
 export { createRepo }

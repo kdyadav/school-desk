@@ -55,7 +55,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { userRepo } from '../repositories'
-import bcrypt from 'bcryptjs'
+import { supabase } from '../supabase'
 
 const auth = useAuthStore()
 
@@ -115,20 +115,23 @@ const handleSave = async () => {
         const dbUser = users[0]
         if (!dbUser) { errorMsg.value = 'User not found'; return }
 
-        const updates = { name: form.value.name.trim() }
+        await userRepo.update(dbUser.id, { name: form.value.name.trim() })
 
+        // Supabase Auth owns the password. We re-authenticate with the
+        // current password (catching the bad-credentials case) and then call
+        // updateUser to set the new one — no bcrypt round-trip needed.
         if (form.value.newPassword) {
-            const ok = bcrypt.compareSync(form.value.currentPassword, dbUser.passwordHash)
-            if (!ok) { errors.value = { currentPassword: 'Incorrect password' }; return }
-            updates.passwordHash = bcrypt.hashSync(form.value.newPassword, 10)
+            const { error: reauthErr } = await supabase.auth.signInWithPassword({
+                email: auth.user.email,
+                password: form.value.currentPassword,
+            })
+            if (reauthErr) { errors.value = { currentPassword: 'Incorrect password' }; return }
+            const { error: pwErr } = await supabase.auth.updateUser({ password: form.value.newPassword })
+            if (pwErr) { errorMsg.value = pwErr.message; return }
         }
 
-        await userRepo.update(dbUser.id, updates)
-
-        // Refresh session
-        auth.user.name = updates.name
-        const session = JSON.parse(localStorage.getItem('school.session') || '{}')
-        if (session.user) { session.user.name = updates.name; localStorage.setItem('school.session', JSON.stringify(session)) }
+        // Refresh the in-memory user so the avatar/header pick up the new name.
+        if (auth.user) auth.user.name = form.value.name.trim()
 
         form.value.currentPassword = ''
         form.value.newPassword = ''

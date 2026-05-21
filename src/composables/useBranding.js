@@ -2,15 +2,41 @@
 // Kept dependency-light so it can be used from both the app shell and the
 // public marketing site without pulling extra modules.
 
-// Read a File as a data URL. Resolves with the data URL string or rejects on
-// load error. Caller is expected to validate size/type beforehand.
-export const fileToDataUrl = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result || ''))
-    reader.onerror = () => reject(reader.error || new Error('File read failed'))
-    reader.readAsDataURL(file)
-  })
+import { supabase } from '../supabase'
+
+const ALLOWED_MIME = new Set([
+  'image/png', 'image/jpeg', 'image/webp', 'image/gif',
+  'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon',
+])
+const MAX_BYTES = 4 * 1024 * 1024 // mirrors the old multipart cap
+
+const extFor = (mime) => ({
+  'image/png':  'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/gif':  'gif',
+  'image/svg+xml': 'svg',
+  'image/x-icon': 'ico',
+  'image/vnd.microsoft.icon': 'ico',
+})[mime] || 'bin'
+
+// Upload a branding asset to Supabase Storage and return its public URL.
+// `kind` is just used as a path prefix so logo/favicon stay grouped.
+// RLS on the `branding` bucket restricts writes to admin/owner roles.
+export const uploadBrandingImage = async (file, kind = 'logo') => {
+  if (!file) throw new Error('No file supplied.')
+  if (!ALLOWED_MIME.has(file.type)) throw new Error(`Unsupported image type: ${file.type}`)
+  if (file.size > MAX_BYTES) throw new Error('Image is larger than 4 MB.')
+
+  const name = `${kind}/${crypto.randomUUID()}.${extFor(file.type)}`
+  const { error } = await supabase.storage
+    .from('branding')
+    .upload(name, file, { contentType: file.type, upsert: false })
+  if (error) throw error
+
+  const { data } = supabase.storage.from('branding').getPublicUrl(name)
+  return { url: data.publicUrl, path: name, mimetype: file.type }
+}
 
 // Apply a tenant's primary color to the document as a CSS variable so any
 // component opting in via `var(--brand-primary)` updates instantly. No-op on
@@ -20,8 +46,8 @@ export const applyPrimaryColor = (hex) => {
   document.documentElement.style.setProperty('--brand-primary', hex)
 }
 
-// Swap the document favicon to a (data) URL. Falls back to the bundled
-// favicon when called with a falsy value.
+// Swap the document favicon to a URL. Falls back to the bundled favicon when
+// called with a falsy value.
 export const applyFavicon = (href) => {
   if (typeof document === 'undefined') return
   const url = href || '/favicon.svg'
@@ -31,14 +57,11 @@ export const applyFavicon = (href) => {
     link.rel = 'icon'
     document.head.appendChild(link)
   }
-  // For data URLs the type can be inferred from the prefix; for the bundled
-  // svg fallback we set the explicit type so browsers don't re-sniff.
-  if (url.startsWith('data:')) {
-    const m = /^data:([^;]+);/.exec(url)
-    link.type = m ? m[1] : 'image/png'
-  } else {
-    link.type = 'image/svg+xml'
-  }
+  // We can't always infer the type from a Supabase Storage URL extension, so
+  // let the browser sniff for hosted assets and only force a type for the
+  // bundled SVG fallback.
+  if (url === '/favicon.svg') link.type = 'image/svg+xml'
+  else link.removeAttribute('type')
   link.href = url
 }
 

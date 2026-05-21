@@ -1,25 +1,16 @@
 # skoolDesk
 
-A browser-based, offline-first school management application built with Vue 3 and Vite. All data is stored locally in the browser via IndexedDB (Dexie), so the app runs entirely without a backend.
+A serverless school-management SPA built with Vue 3 and Vite, talking directly to a Supabase project (Postgres + Auth + Storage) via `@supabase/supabase-js`. Row-Level Security enforces role-based access; Postgres triggers write the audit log.
 
 **Live demo:** [skool-desk.netlify.app](https://skool-desk.netlify.app/)
 
 ## Features
 
-- **First-run setup wizard** — a two-step onboarding flow (school profile, then admin account) is forced until both have been configured.
-- **Per-deployment multi-tenancy** — every browser-installed copy is its own tenant. School name, short name, tagline, contact details, social/nav links, logo, favicon, and primary colour are configured at runtime and stored in IndexedDB. The document title, favicon, and theme colour update live from the saved profile.
-- **Editable school profile** — admins can update branding and contact information any time at `/app/settings/school`.
-- **Authentication & roles** — local auth with bcrypt-hashed passwords; role-based route guards for `admin`, `teacher`, `student`, and `parent`.
-- **Academic setup** — academic years, classes, sections, and subjects.
-- **People** — students, guardians, teachers, and user accounts.
-- **Enrollment** — assign students to sections per academic year.
-- **Timetable** — periods and a weekly section/teacher grid.
-- **Attendance** — daily marking and per-student/section summaries.
-- **Exams** — exam definitions, mark entry, and report cards.
-- **Fees** — fee structures, invoices, payments, and a student-facing fee view.
-- **Payroll** — staff salary structures (earnings/deductions), monthly payslip generation, salary payments, and a staff-facing payslip view.
-- **Announcements** — audience-targeted notices.
-- **Audit log** — every repository write is recorded (with secret fields redacted) and viewable by admins.
+- **First-run setup wizard** — two-step onboarding (school profile, then owner account). The very first Supabase Auth signup becomes the `owner` via the `on_auth_user_created` trigger.
+- **Multi-role auth** — Supabase Auth handles credentials; a `profiles` row keyed on `auth.users.id` carries `role` (`owner` / `admin` / `teacher` / `student` / `parent`), `name`, and `linkedId`. Role-based route guards work off the cached profile.
+- **Editable school profile** — admins update branding and contact info at `/app/settings/school`. Logos and favicons live in the public `branding` Supabase Storage bucket and are referenced from the `school_profile` row as URLs.
+- **Academic setup, people, enrollment, timetable, attendance, exams, fees, payroll, announcements** — all CRUD goes through PostgREST (`@supabase/supabase-js`) with per-table RLS policies.
+- **Audit log** — Postgres triggers write one `audit_logs` row per INSERT/UPDATE/DELETE on every domain table; auth events (login / logout / signup) are written via the `record_auth_event` RPC. Admins read the timeline; the owner can clear it.
 - **Reusable UI library** — form primitives in `src/ui-lib` with a lightweight `useForm` composable and Zod-backed validation.
 - **Command palette & theme** — keyboard-driven navigation and light/dark theming.
 
@@ -29,44 +20,42 @@ A browser-based, offline-first school management application built with Vue 3 an
 - [Vite](https://vitejs.dev/) for dev server and build
 - [Vue Router](https://router.vuejs.org/) for routing and guards
 - [Pinia](https://pinia.vuejs.org/) for state
-- [Dexie](https://dexie.org/) over IndexedDB for persistence
+- [Supabase JS](https://supabase.com/docs/reference/javascript) (PostgREST + Auth + Storage)
 - [Zod](https://zod.dev/) for schema validation
 - [Tailwind CSS](https://tailwindcss.com/) + PrimeFlex for styling
-- [bcryptjs](https://github.com/dcodeIO/bcrypt.js) for password hashing
-- [Vitest](https://vitest.dev/) + [fake-indexeddb](https://github.com/dumbmatter/fakeIndexedDB) for tests
 
 ## Getting started
 
 ### Prerequisites
 
 - Node.js 18+ and npm
+- A Supabase project (free tier is fine). Apply the SQL migration at [`../supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql) via the Supabase SQL editor or `supabase db push`.
 
-### Install
+### Configure
+
+Set the project URL and anon (publishable) key in [`ui/.env`](.env):
+
+```
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon-or-publishable-key>
+```
+
+The anon key is safe to ship to the browser — RLS controls access.
+
+### Install & develop
 
 ```bash
 npm install
-```
-
-### Develop
-
-```bash
 npm run dev
 ```
 
-Open the printed local URL. On first launch you will be redirected to `/setup` to fill in the school profile and create the initial admin account.
+Open the printed local URL. On first launch the SPA hits the `needs_setup()` RPC and redirects to `/setup` until an `owner` profile exists.
 
 ### Build & preview
 
 ```bash
 npm run build
 npm run preview
-```
-
-### Test
-
-```bash
-npm test          # run once
-npm run test:watch
 ```
 
 ## Project structure
@@ -78,29 +67,32 @@ src/
   modules/        # Feature areas (academic, people, attendance, exams, fees, …)
   router/         # Routes and auth/role guards
   stores/         # Pinia stores per domain
-  repositories/   # Dexie-backed repositories with schema validation + audit
+  repositories/   # Repository facade + supabase adapter (adapters/supabase)
   schemas/        # Zod schemas for every entity
-  db/             # Dexie database definition and seed data
   ui-lib/         # Reusable form components, useForm, validators
-  composables/    # useTheme, useTableState, useCommandPalette, useRoleContext
-  audit/          # Audit logger wired into repositories
-  plugins/        # PrimeVue and other plugin setup
+  composables/    # useTheme, useTableState, useCommandPalette, useRoleContext, useBranding
+  audit/          # Auth-event audit writer (CRUD audit is server-side via DB triggers)
+  plugins/        # Plugin setup
   site/           # Public marketing site (Home/About/Contact/…) and siteConfig defaults
-tests/            # Vitest suites for stores, repositories, schemas, audit, and site
+  supabase.js     # Shared @supabase/supabase-js client instances
 ```
 
 ## Data & persistence
 
-Data lives entirely in the browser's IndexedDB under the `SchoolDeskDB` database (see `src/db/dexie.js`). Clearing site data in your browser will reset the application, including the admin account and the school profile. Seed data can be loaded from `src/db/seed.js`.
+All data lives in your Supabase Postgres database. Tables, RLS, triggers, RPCs, and the `branding` storage bucket are defined in [`supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql).
 
-## Branding the app for a school
+Key design notes:
+- API table names are camelCase (`academicYears`, `examMarks`); Postgres table names are snake_case (`academic_years`, `exam_marks`) via the original Prisma `@@map(...)` directives. The mapping lives in `src/repositories/adapters/supabase/index.js`.
+- `profiles` shadows `auth.users` and carries the `role` everything else gates on.
+- `pending_invites` lets an admin pre-register a role before the invitee signs up.
 
-Each install is a self-contained tenant; there is no central registry of schools. To rebrand:
+## Limitations vs. the legacy Fastify backend
 
-1. Run the app and complete the setup wizard, providing the school name, short name, tagline, contact details, primary colour, and (optionally) a logo and favicon.
-2. After login, an admin can revisit **System → School Profile** (`/app/settings/school`) to change any of the above.
+These are intentional consequences of moving to PostgREST + RLS without an Edge Function tier:
 
-Logos and favicons are stored as base64 data URLs on the singleton `schoolProfile` row, so no asset pipeline or backend is involved. The fallback values used before the profile is saved live in `src/site/siteConfig.js`.
+- **Admin "Create User" can't set the password directly** — Supabase Auth requires service-role privileges for `admin.createUser`. The flow uses a secondary `signUp` client (no session persistence) plus a `pending_invites` row that the trigger consumes. Users sign in with whatever password the admin set in the form.
+- **"Change password for another user"** maps to `resetPasswordForEmail` (sends a magic-link reset email).
+- **"Delete user"** removes the `profiles` row only. The orphaned `auth.users` row can be deleted from the Supabase dashboard.
 
 ## License
 

@@ -80,17 +80,29 @@
 import { onMounted } from 'vue'
 import { useAuditStore } from '../../stores/audit'
 import { AUDIT_ACTIONS } from '../../audit'
-import { TABLES } from '../../db/dexie'
 import BaseButton from '../../ui-lib/BaseButton.vue'
 import BaseInput from '../../ui-lib/BaseInput.vue'
 import BaseSelect from '../../ui-lib/BaseSelect.vue'
+
+// API table names — match the keys used by the repository registry and the
+// PG_TABLE mapping in src/repositories/adapters/supabase/index.js.
+const ENTITY_TABLES = [
+    'academicYears', 'classes', 'sections', 'subjects',
+    'guardians', 'students', 'teachers', 'users',
+    'enrollments', 'periods', 'timetable', 'attendance',
+    'exams', 'examMarks',
+    'feeStructures', 'invoices', 'payments',
+    'announcements',
+    'salaryStructures', 'payslips', 'salaryPayments',
+    'schoolProfile',
+]
 
 const store = useAuditStore()
 
 const entityOpts = [
     { value: '', label: 'All entities' },
     { value: 'auth', label: 'auth' },
-    ...TABLES.filter((t) => t !== 'auditLogs').map((t) => ({ value: t, label: t })),
+    ...ENTITY_TABLES.map((t) => ({ value: t, label: t })),
 ]
 const actionOpts = [
     { value: '', label: 'All actions' },
