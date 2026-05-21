@@ -137,6 +137,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     const snapshot = user.value
+    user.value = null
+    session.value = null
     if (snapshot) {
       await recordAudit({
         entity: 'auth', action: 'auth.logout',
@@ -144,8 +146,6 @@ export const useAuthStore = defineStore('auth', () => {
         meta: { email: snapshot.email, role: snapshot.role },
       })
     }
-    user.value = null
-    session.value = null
     await supabase.auth.signOut()
   }
 

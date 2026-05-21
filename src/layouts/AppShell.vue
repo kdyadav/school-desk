@@ -315,9 +315,9 @@ const roleBadgeClass = computed(() => ({
     parent: 'bg-amber-100 text-amber-700',
 }[auth.role] || 'bg-slate-100 text-slate-700'))
 
-const handleLogout = () => {
-    auth.logout()
+const handleLogout = async () => {
     userMenuOpen.value = false
+    await auth.logout()
     router.push('/login')
 }
 

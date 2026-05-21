@@ -93,7 +93,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useSchoolStore } from '../../stores/school'
 import { useForm } from '../../ui-lib/useForm'
 import { required, email as emailValidator } from '../../ui-lib/validators'
-import { uploadBrandingImage } from '../../composables/useBranding'
+import { uploadBrandingImage, deleteBrandingImage } from '../../composables/useBranding'
 import BaseInput from '../../ui-lib/BaseInput.vue'
 import BaseTextarea from '../../ui-lib/BaseTextarea.vue'
 import BaseButton from '../../ui-lib/BaseButton.vue'
@@ -168,6 +168,9 @@ const onSave = async () => {
     if (!validateAll()) return
     saving.value = true
     try {
+        // Snapshot the previously-persisted logo so we can delete it from
+        // Storage after a successful save if it was replaced or cleared.
+        const previousLogoUrl = school.profile?.logoUrl || null
         let logoUrl = form.logoUrl
         if (pendingFile.value) {
             try {
@@ -193,6 +196,9 @@ const onSave = async () => {
             logoUrl: logoUrl || null,
             primaryColor: form.primaryColor || '#4f46e5',
         })
+        if (previousLogoUrl && previousLogoUrl !== logoUrl) {
+            await deleteBrandingImage(previousLogoUrl)
+        }
         setField('logoUrl', logoUrl || null)
         if (pendingPreview.value) { URL.revokeObjectURL(pendingPreview.value); pendingPreview.value = '' }
         pendingFile.value = null

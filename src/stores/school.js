@@ -63,11 +63,17 @@ export const useSchoolStore = defineStore('school', () => {
     saving.value = true
     try {
       const existing = await schoolProfileRepo.get(1)
+      // The schema's `.default()` only kicks in for undefined, not null. Stored
+      // rows may have null jsonb columns (social, nav, contact, …), so we
+      // pre-merge defaults + the existing row + the incoming patch and send
+      // the full payload — that way the validated object can't have nulls in
+      // fields the schema requires as arrays/objects/strings.
+      const fullPayload = { ...mergeWithDefaults(existing), ...patch, key: 1 }
       let row
       if (existing) {
-        row = await schoolProfileRepo.update(1, { ...patch, key: 1 })
+        row = await schoolProfileRepo.update(1, fullPayload)
       } else {
-        row = await schoolProfileRepo.create({ ...buildDefaults(), ...patch, key: 1 })
+        row = await schoolProfileRepo.create(fullPayload)
       }
       profile.value = mergeWithDefaults(row)
       loaded.value = true

@@ -35,7 +35,10 @@ export function createRepo(tableName, schema /* , opts unused — audit/redact a
     if (!schema) return data
     const result = schema.safeParse(data)
     if (!result.success) {
-      const err = new Error(`Validation failed for ${tableName}`)
+      const summary = result.error.issues
+        .map((i) => `${i.path.join('.') || '<root>'}: ${i.message}`)
+        .join('; ')
+      const err = new Error(`Validation failed for ${tableName} — ${summary}`)
       err.issues = result.error.issues
       throw err
     }

@@ -38,6 +38,27 @@ export const uploadBrandingImage = async (file, kind = 'logo') => {
   return { url: data.publicUrl, path: name, mimetype: file.type }
 }
 
+// Extract the storage path (e.g. `logo/uuid.png`) from a public URL produced
+// by `getPublicUrl`. Returns null if the URL doesn't look like one of ours.
+const pathFromPublicUrl = (url) => {
+  if (!url || typeof url !== 'string') return null
+  const marker = '/storage/v1/object/public/branding/'
+  const idx = url.indexOf(marker)
+  if (idx === -1) return null
+  return decodeURIComponent(url.slice(idx + marker.length).split('?')[0]) || null
+}
+
+// Best-effort delete of a previously-uploaded branding asset. Returns true if
+// a delete was attempted (regardless of outcome) so callers can log. Silently
+// returns false for URLs that aren't ours (e.g. a hand-pasted external link).
+export const deleteBrandingImage = async (url) => {
+  const path = pathFromPublicUrl(url)
+  if (!path) return false
+  const { error } = await supabase.storage.from('branding').remove([path])
+  if (error) console.warn('Failed to delete old branding asset', path, error)
+  return true
+}
+
 // Apply a tenant's primary color to the document as a CSS variable so any
 // component opting in via `var(--brand-primary)` updates instantly. No-op on
 // the server / in tests without a DOM.
