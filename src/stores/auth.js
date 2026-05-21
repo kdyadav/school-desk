@@ -45,10 +45,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  /** Returns true when no users exist yet (first-time setup needed). */
+  const _setupChecked = ref(false)
+
+  /** Returns true when no users exist yet (first-time setup needed). Cached after first fetch. */
   const needsSetup = async () => {
+    if (_setupChecked.value) return _setupNeeded.value
     const res = await apiFetch('/auth/needs-setup')
-    return !!res?.needsSetup
+    _setupNeeded.value = !!res?.needsSetup
+    _setupChecked.value = true
+    return _setupNeeded.value
   }
 
   /**
@@ -61,6 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = res.user
       token.value = res.token
       saveSession({ user: user.value, token: token.value })
+      _setupChecked.value = false
       return true
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) return false
