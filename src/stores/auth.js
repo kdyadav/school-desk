@@ -46,6 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const _setupChecked = ref(false)
+  const _setupNeeded = ref(false)
 
   /** Returns true when no users exist yet (first-time setup needed). Cached after first fetch. */
   const needsSetup = async () => {
