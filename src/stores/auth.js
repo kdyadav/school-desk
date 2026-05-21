@@ -167,15 +167,23 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Keep the in-memory state in sync with token refresh + cross-tab signouts.
-  supabase.auth.onAuthStateChange(async (_event, s) => {
+  // The callback must not await other supabase calls inline — supabase-js holds
+  // a navigator lock for the duration of the callback and any nested supabase
+  // request (e.g. fetchProfile, or school.load() running in a route guard)
+  // deadlocks behind it. Defer the work with setTimeout(0). INITIAL_SESSION is
+  // already handled by rehydrate() at startup, so skip it here.
+  supabase.auth.onAuthStateChange((event, s) => {
+    if (event === 'INITIAL_SESSION') return
     if (!s) {
       user.value = null
       session.value = null
       return
     }
     session.value = s
-    const profile = await fetchProfile(s.user.id)
-    user.value = toPublicUser(profile, s)
+    setTimeout(async () => {
+      const profile = await fetchProfile(s.user.id)
+      user.value = toPublicUser(profile, s)
+    }, 0)
   })
 
   return {
