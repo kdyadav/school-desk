@@ -125,6 +125,14 @@ watch(() => rc.ready, (ready) => {
         store.loadGrid(selSectionId.value)
     }
 }, { immediate: true })
+
+function loadSectionGrid(sectionId) {
+    // The class/section picker is admin-only, but defend against tampered
+    // state: only ever load a grid for a section the user may access.
+    if (!sectionId) return
+    if (!rc.canAccessSection(sectionId)) return
+    store.loadGrid(sectionId)
+}
 const editorOpen = ref(false)
 const saving = ref(false)
 const conflictMsg = ref('')
@@ -139,7 +147,7 @@ const sectionOptions = computed(() => sectionsForClass.value.map((s) => ({ value
 const subjectOptions = computed(() => academic.subjects.map((s) => ({ value: s.id, label: `${s.code} — ${s.name}` })))
 const teacherOptions = computed(() => academic.teachers.map((t) => ({ value: t.id, label: `${t.firstName} ${t.lastName}` })))
 
-function onSectionChange() { if (selSectionId.value) store.loadGrid(selSectionId.value) }
+function onSectionChange() { loadSectionGrid(selSectionId.value) }
 
 function slotData(day, periodId) { return store.getSlot(day, periodId) }
 function subjectName(id) { return academic.subjects.find((s) => s.id === id)?.code || '?' }

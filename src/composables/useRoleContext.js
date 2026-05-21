@@ -77,6 +77,7 @@ export function useRoleContext() {
     if (isAdmin.value) return true
     if (isTeacher.value) return mySectionIds.value.includes(sectionId)
     if (isStudent.value) return sectionId === mySectionId.value
+    if (isParent.value) return false // parents access by student, not section
     return false
   }
 
@@ -86,6 +87,36 @@ export function useRoleContext() {
     if (isTeacher.value) return sections.filter((s) => mySectionIds.value.includes(s.id))
     if (isStudent.value) return sections.filter((s) => s.id === mySectionId.value)
     return []
+  }
+
+  /**
+   * Check whether the current user is allowed to view data for `studentId`.
+   * Admin/owner: always. Student: only themselves. Parent: any of their
+   * children. Teacher: any student currently enrolled in a section they teach
+   * (resolved via the student's currentSectionId).
+   */
+  async function canAccessStudent(studentId) {
+    if (studentId == null) return false
+    if (isAdmin.value) return true
+    if (isStudent.value) return studentId === myStudentId.value
+    if (isParent.value) return myStudentIds.value.includes(studentId)
+    if (isTeacher.value) {
+      const s = await studentRepo.get(studentId)
+      return !!s && mySectionIds.value.includes(s.currentSectionId)
+    }
+    return false
+  }
+
+  /** Synchronous variant for caches already loaded via the people store. */
+  function canAccessStudentSync(studentId, lookupSectionId) {
+    if (studentId == null) return false
+    if (isAdmin.value) return true
+    if (isStudent.value) return studentId === myStudentId.value
+    if (isParent.value) return myStudentIds.value.includes(studentId)
+    if (isTeacher.value && lookupSectionId != null) {
+      return mySectionIds.value.includes(lookupSectionId)
+    }
+    return false
   }
 
   return {
@@ -102,6 +133,8 @@ export function useRoleContext() {
     myGuardianId,
     myStudentIds,
     canAccessSection,
+    canAccessStudent,
+    canAccessStudentSync,
     filterSections,
     resolve,
   }

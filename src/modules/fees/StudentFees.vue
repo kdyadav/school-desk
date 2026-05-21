@@ -5,10 +5,11 @@
             <p class="text-sm text-gray-500">View your invoices and payment history.</p>
         </div>
 
-        <!-- Admin/Teacher: pick a student. Student/Parent: auto-resolved -->
+        <!-- Admin: pick any student. Parent with multiple children: pick child.
+             Student / parent with one child: auto-resolved. -->
         <div v-if="canPickStudent" class="bg-white rounded-xl border border-gray-200 p-4">
-            <BaseSelect label="Student" :modelValue="selStudentId"
-                @update:modelValue="(v) => { selStudentId = Number(v); loadForStudent() }" :options="studentOpts"
+            <BaseSelect :label="rc.isParent.value ? 'Child' : 'Student'" :modelValue="selStudentId"
+                @update:modelValue="(v) => { selStudentId = Number(v) }" :options="studentOpts"
                 placeholder="Select student" />
         </div>
 
@@ -91,15 +92,36 @@ store.loadAll(); academic.loadAll(); people.loadAll()
 const rc = useRoleContext()
 const selStudentId = ref('')
 
-const canPickStudent = computed(() => rc.isAdmin.value)
-
-const studentOpts = computed(() =>
-    people.students.map((s) => ({ value: s.id, label: `${s.firstName} ${s.lastName} (${s.admissionNo})` }))
+// Admins pick any student; parents with >1 child pick a child. Others have
+// their student auto-selected.
+const canPickStudent = computed(() =>
+    rc.isAdmin.value || (rc.isParent.value && rc.myStudentIds.value.length > 1)
 )
 
-const myInvoices = computed(() =>
-    selStudentId.value ? store.invoicesForStudent(selStudentId.value) : []
-)
+// The set of students this user is even allowed to view. Admin sees all;
+// parent sees their children; student sees themselves; anyone else nothing.
+const allowedStudentIds = computed(() => {
+    if (rc.isAdmin.value) return null // null = unrestricted
+    if (rc.isParent.value) return rc.myStudentIds.value
+    if (rc.isStudent.value && rc.myStudentId.value) return [rc.myStudentId.value]
+    return []
+})
+
+const studentOpts = computed(() => {
+    const allowed = allowedStudentIds.value
+    const list = allowed == null
+        ? people.students
+        : people.students.filter((s) => allowed.includes(s.id))
+    return list.map((s) => ({ value: s.id, label: `${s.firstName} ${s.lastName} (${s.admissionNo})` }))
+})
+
+const myInvoices = computed(() => {
+    if (!selStudentId.value) return []
+    // Defensive: never render invoices for a student outside the allowed set.
+    const allowed = allowedStudentIds.value
+    if (allowed != null && !allowed.includes(selStudentId.value)) return []
+    return store.invoicesForStudent(selStudentId.value)
+})
 
 function balance(inv) { return inv.amount - store.totalPaidForInvoice(inv.id) }
 
@@ -107,9 +129,10 @@ function statusBadge(st) {
     return { pending: 'bg-amber-100 text-amber-700', partial: 'bg-blue-100 text-blue-700', paid: 'bg-green-100 text-green-700' }[st]
 }
 
-// Auto-select for student/parent
+// Auto-select for student / single-child parent.
 watch(() => rc.ready, (ready) => {
     if (!ready) return
+    if (rc.isAdmin.value) return
     if (rc.myStudentId.value) selStudentId.value = rc.myStudentId.value
 }, { immediate: true })
 </script>

@@ -74,11 +74,21 @@ store.loadAll()
 
 const canCreate = computed(() => ['owner', 'admin', 'teacher'].includes(auth.role))
 const filterAud = ref('all')
-const filterOpts = ['all', ...AUDIENCE_OPTIONS.filter((o) => o !== 'all')]
+// Only offer audience chips a user can actually see — owners/admins see every
+// audience, anyone else only their own role's audience plus 'all'.
+const filterOpts = computed(() => {
+    if (['owner', 'admin'].includes(auth.role)) {
+        return ['all', ...AUDIENCE_OPTIONS.filter((o) => o !== 'all')]
+    }
+    return ['all', auth.role].filter(Boolean)
+})
 
 const filtered = computed(() => {
-    if (filterAud.value === 'all') return store.forRole(auth.role)
-    return store.items.filter((a) => a.audience === filterAud.value)
+    // Always start from the role-visible set so a non-privileged user can't
+    // peek into a higher-audience feed by selecting it in the filter.
+    const visible = store.forRole(auth.role)
+    if (filterAud.value === 'all') return visible
+    return visible.filter((a) => a.audience === filterAud.value)
 })
 
 const audBadge = (aud) => ({

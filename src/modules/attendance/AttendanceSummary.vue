@@ -78,14 +78,17 @@
 import { ref, computed, watch } from 'vue'
 import { useAcademicStore } from '../../stores/academic'
 import { useAttendanceStore } from '../../stores/attendance'
+import { usePeopleStore } from '../../stores/people'
 import { useRoleContext } from '../../composables/useRoleContext'
 import BaseInput from '../../ui-lib/BaseInput.vue'
 import BaseSelect from '../../ui-lib/BaseSelect.vue'
 
 const academic = useAcademicStore()
 const store = useAttendanceStore()
+const people = usePeopleStore()
 const rc = useRoleContext()
 academic.loadAll()
+people.loadAll()
 
 const selClassId = ref('')
 const selSectionId = ref('')
@@ -121,12 +124,45 @@ const filteredRows = computed(() => {
     return rows.value.filter((r) => ids.includes(r.student.id))
 })
 
+function canLoadSection(sectionId) {
+    if (rc.isAdmin.value) return true
+    if (rc.isTeacher.value) return rc.mySectionIds.value.includes(sectionId)
+    // Student / parent: the visible rows are independently filtered by
+    // student id, so any section their own student belongs to is fine.
+    if (rc.isStudent.value) return sectionId === rc.mySectionId.value
+    if (rc.isParent.value) return rc.myStudentIds.value.length > 0
+    return false
+}
+
 async function onLoad() {
-    if (!selSectionId.value || !selMonth.value) { rows.value = []; return }
+    if (!selMonth.value) { rows.value = []; return }
+    // Parent: aggregate summaries across every child's section so parents
+    // with kids in different sections see all of them, not just the first.
+    if (rc.isParent.value) {
+        const sectionIds = [...new Set(
+            rc.myStudentIds.value
+                .map((id) => people.students.find((s) => s.id === id)?.currentSectionId)
+                .filter((v) => v != null)
+        )]
+        if (!sectionIds.length && selSectionId.value) sectionIds.push(selSectionId.value)
+        const merged = []
+        for (const sid of sectionIds) {
+            const r = await store.monthlySummary(sid, selMonth.value)
+            merged.push(...r)
+        }
+        rows.value = merged
+        return
+    }
+    if (!selSectionId.value) { rows.value = []; return }
+    // Picker hides sections outside the user's scope, but guard against
+    // direct state manipulation: never load a summary for an off-limits section.
+    if (!canLoadSection(selSectionId.value)) { rows.value = []; return }
     rows.value = await store.monthlySummary(selSectionId.value, selMonth.value)
 }
 
-// Auto-load for student/parent
+// Auto-load for student/parent. For parents we also re-run whenever the
+// people store finishes loading so multi-child aggregation can resolve every
+// child's section, not just the first one available via the role context.
 watch(() => rc.ready, (ready) => {
     if (!ready) return
     if ((rc.isStudent.value || rc.isParent.value) && rc.mySectionId.value) {
@@ -134,6 +170,10 @@ watch(() => rc.ready, (ready) => {
         onLoad()
     }
 }, { immediate: true })
+
+watch(() => people.students.length, () => {
+    if (rc.isParent.value && rc.ready.value) onLoad()
+})
 
 function pctClass(r) {
     if (!r.total) return 'text-gray-400'

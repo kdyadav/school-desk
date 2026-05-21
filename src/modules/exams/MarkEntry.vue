@@ -99,6 +99,15 @@ function onExamChange() { selSectionId.value = ''; students.value = [] }
 
 async function onLoad() {
     if (!selSectionId.value || !selExamId.value) return
+    // Defence against direct state manipulation: a teacher must only mark
+    // sections they teach. The picker already filters, but a tampered
+    // `selSectionId` would otherwise let `store.loadMarks` fetch a section's
+    // marks they can't access.
+    if (!rc.canAccessSection(selSectionId.value)) {
+        students.value = []
+        store.marks.splice(0)
+        return
+    }
     students.value = await store.enrolledStudents(selSectionId.value)
     await store.loadMarks(selExamId.value)
 }

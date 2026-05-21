@@ -113,9 +113,16 @@ const sectionOptions = computed(() =>
 )
 
 function onContextChange() {
-    if (selSectionId.value && selDate.value) {
-        store.load(selSectionId.value, selDate.value)
+    if (!selSectionId.value || !selDate.value) return
+    // Block non-admins from loading attendance for a section that isn't
+    // theirs (URL/state manipulation guard — the picker already filters).
+    if (!rc.canAccessSection(selSectionId.value)) {
+        selSectionId.value = ''
+        store.roster.splice(0)
+        store.records.splice(0)
+        return
     }
+    store.load(selSectionId.value, selDate.value)
 }
 
 function markAll(status) {

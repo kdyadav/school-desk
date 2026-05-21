@@ -96,17 +96,29 @@ store.loadExams()
 academic.loadAll()
 people.loadAll()
 
-const canPickStudent = computed(() => rc.isAdmin.value || rc.isTeacher.value)
+// Parents with multiple children pick from a constrained list; everyone else
+// who is allowed to pick picks normally.
+const canPickStudent = computed(() =>
+    rc.isAdmin.value || rc.isTeacher.value
+    || (rc.isParent.value && rc.myStudentIds.value.length > 1)
+)
 
 const selYearId = ref('')
 const selStudentId = ref('')
 const report = ref([])
 
-// Filter student list: teacher sees own sections' students, admin sees all
+// Filter student list by role. Admin: all. Teacher: students in their
+// sections. Parent: only their children. Student: only themselves.
 const studentOptions = computed(() => {
     if (rc.isAdmin.value) return people.students
     if (rc.isTeacher.value) {
         return people.students.filter((s) => rc.mySectionIds.value.includes(s.currentSectionId))
+    }
+    if (rc.isParent.value) {
+        return people.students.filter((s) => rc.myStudentIds.value.includes(s.id))
+    }
+    if (rc.isStudent.value && rc.myStudentId.value) {
+        return people.students.filter((s) => s.id === rc.myStudentId.value)
     }
     return []
 })
@@ -138,6 +150,11 @@ watch(() => rc.ready, (ready) => {
 
 async function onLoad() {
     if (!selStudentId.value || !selYearId.value) { report.value = []; return }
+    // Guard against tampering with selStudentId via devtools / URL: the
+    // store's reportCardData has no role awareness, so verify the current
+    // user is actually allowed to see this student's marks.
+    const allowedIds = new Set(studentOptions.value.map((s) => s.id))
+    if (!allowedIds.has(selStudentId.value)) { report.value = []; return }
     report.value = await store.reportCardData(selStudentId.value, selYearId.value)
 }
 
